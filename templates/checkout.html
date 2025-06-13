@@ -1,63 +1,138 @@
 {% extends "base.html" %}
 
-{% block title %}Checkout{% endblock %}
+{% block title %}Checkout - Sistema de Ventas de Electrónicos{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Finalizar Compra</h1>
+    <h1 class="mb-4">Checkout</h1>
     
     <div class="row">
         <div class="col-md-8">
             <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información de Envío</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title">Dirección de Entrega</h5>
-                    <form id="checkoutForm" method="POST">
+                    <form action="{{ url_for('checkout') }}" method="POST">
                         <div class="mb-3">
-                            <label for="direccion" class="form-label">Dirección completa</label>
-                            <textarea class="form-control" id="direccion" name="direccion" rows="3" required>{{ current_user.direccion }}</textarea>
+                            <label for="direccion" class="form-label">Dirección de Envío</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" 
+                                   value="{{ current_user.direccion }}" required>
                         </div>
                         
-                        <h5 class="card-title mt-4">Método de Pago</h5>
                         <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono de Contacto</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   value="{{ current_user.telefono }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Método de Pago</label>
                             <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="metodo_pago" id="tarjeta" value="tarjeta" checked>
-                                <label class="form-check-label" for="tarjeta">
-                                    Tarjeta de Crédito/Débito
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" name="metodo_pago" id="paypal" value="paypal">
-                                <label class="form-check-label" for="paypal">
-                                    PayPal
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="metodo_pago" id="efectivo" value="efectivo">
+                                <input class="form-check-input" type="radio" name="metodo_pago" 
+                                       id="efectivo" value="efectivo" checked>
                                 <label class="form-check-label" for="efectivo">
-                                    Pago en Efectivo
+                                    <i class="bi bi-cash"></i> Efectivo
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="metodo_pago" 
+                                       id="qr" value="qr">
+                                <label class="form-check-label" for="qr">
+                                    <i class="bi bi-qr-code"></i> Pago con QR
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="metodo_pago" 
+                                       id="paypal" value="paypal">
+                                <label class="form-check-label" for="paypal">
+                                    <i class="bi bi-paypal"></i> PayPal
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="metodo_pago" 
+                                       id="tarjeta" value="tarjeta">
+                                <label class="form-check-label" for="tarjeta">
+                                    <i class="bi bi-credit-card"></i> Tarjeta de Crédito/Débito
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="metodo_pago" 
+                                       id="transferencia" value="transferencia">
+                                <label class="form-check-label" for="transferencia">
+                                    <i class="bi bi-bank"></i> Transferencia Bancaria
                                 </label>
                             </div>
                         </div>
                         
-                        <div id="tarjetaDetalles" class="mb-3">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="numeroTarjeta" class="form-label">Número de Tarjeta</label>
-                                    <input type="text" class="form-control" id="numeroTarjeta" placeholder="1234 5678 9012 3456">
+                        <!-- Detalles de Tarjeta -->
+                        <div id="tarjetaDetalles" class="mb-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="numeroTarjeta" class="form-label">Número de Tarjeta</label>
+                                            <input type="text" class="form-control" id="numeroTarjeta" 
+                                                   placeholder="1234 5678 9012 3456">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento</label>
+                                            <input type="text" class="form-control" id="fechaVencimiento" 
+                                                   placeholder="MM/AA">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label for="cvv" class="form-label">CVV</label>
+                                            <input type="text" class="form-control" id="cvv" 
+                                                   placeholder="123">
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 mb-3">
-                                    <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento</label>
-                                    <input type="text" class="form-control" id="fechaVencimiento" placeholder="MM/AA">
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles de Transferencia -->
+                        <div id="transferenciaDetalles" class="mb-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Datos Bancarios</h6>
+                                    <p class="mb-1"><strong>Banco:</strong> Banco Nacional</p>
+                                    <p class="mb-1"><strong>Cuenta:</strong> 1234-5678-9012-3456</p>
+                                    <p class="mb-1"><strong>Titular:</strong> TechStore S.A.</p>
+                                    <p class="mb-0"><strong>RUC:</strong> 12345678901</p>
                                 </div>
-                                <div class="col-md-3 mb-3">
-                                    <label for="cvv" class="form-label">CVV</label>
-                                    <input type="text" class="form-control" id="cvv" placeholder="123">
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles de PayPal -->
+                        <div id="paypalDetalles" class="mb-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <p class="mb-3">Serás redirigido a PayPal para completar tu pago</p>
+                                    <form action="{{ url_for('create_paypal_payment') }}" method="POST">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-paypal"></i> Pagar con PayPal
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Detalles de QR -->
+                        <div id="qr-container" class="mb-3" style="display: none;">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title mb-3">Escanea el código QR para pagar</h6>
+                                    <img src="{{ url_for('serve_image', filename='QR.jpg') }}" 
+                                         alt="Código QR de pago" 
+                                         class="img-fluid mb-3" 
+                                         style="max-width: 200px;">
+                                    <p class="text-muted mb-0">Total a pagar: ${{ "%.2f"|format(total) }}</p>
                                 </div>
                             </div>
                         </div>
                         
                         <button type="submit" class="btn btn-primary">
-                            Confirmar Pedido
+                            <i class="bi bi-check-circle"></i> Confirmar Pedido
                         </button>
                     </form>
                 </div>
@@ -114,18 +189,42 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tarjetaDetalles = document.getElementById('tarjetaDetalles');
-    const metodoPagoInputs = document.querySelectorAll('input[name="metodo_pago"]');
+    const qrRadio = document.getElementById('qr');
+    const efectivoRadio = document.getElementById('efectivo');
+    const tarjetaRadio = document.getElementById('tarjeta');
+    const paypalRadio = document.getElementById('paypal');
+    const transferenciaRadio = document.getElementById('transferencia');
     
-    metodoPagoInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            if (this.value === 'tarjeta') {
-                tarjetaDetalles.style.display = 'block';
-            } else {
-                tarjetaDetalles.style.display = 'none';
-            }
-        });
-    });
+    const qrContainer = document.getElementById('qr-container');
+    const tarjetaDetalles = document.getElementById('tarjetaDetalles');
+    const paypalDetalles = document.getElementById('paypalDetalles');
+    const transferenciaDetalles = document.getElementById('transferenciaDetalles');
+    
+    function togglePaymentDetails() {
+        // Ocultar todos los contenedores primero
+        qrContainer.style.display = 'none';
+        tarjetaDetalles.style.display = 'none';
+        paypalDetalles.style.display = 'none';
+        transferenciaDetalles.style.display = 'none';
+        
+        // Mostrar el contenedor correspondiente
+        if (qrRadio.checked) {
+            qrContainer.style.display = 'block';
+        } else if (tarjetaRadio.checked) {
+            tarjetaDetalles.style.display = 'block';
+        } else if (paypalRadio.checked) {
+            paypalDetalles.style.display = 'block';
+        } else if (transferenciaRadio.checked) {
+            transferenciaDetalles.style.display = 'block';
+        }
+    }
+    
+    // Agregar event listeners a todos los radio buttons
+    qrRadio.addEventListener('change', togglePaymentDetails);
+    efectivoRadio.addEventListener('change', togglePaymentDetails);
+    tarjetaRadio.addEventListener('change', togglePaymentDetails);
+    paypalRadio.addEventListener('change', togglePaymentDetails);
+    transferenciaRadio.addEventListener('change', togglePaymentDetails);
     
     // Formatear número de tarjeta
     const numeroTarjeta = document.getElementById('numeroTarjeta');

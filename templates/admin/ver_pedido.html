@@ -92,15 +92,31 @@
                     
                     <hr>
                     
-                    <div class="mt-3">
-                        <p><strong>Fecha del Pedido:</strong><br>
-                        {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</p>
-                        
-                        {% if pedido.fecha_actualizacion %}
-                        <p><strong>Última Actualización:</strong><br>
-                        {{ pedido.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
-                        {% endif %}
-                    </div>
+                    <!-- Sección de Factura -->
+                    <h5>Factura</h5>
+                    {% if pedido.factura %}
+                        <div class="mb-3">
+                            <p><strong>Número de Factura:</strong> {{ pedido.factura.numero_factura }}</p>
+                            <p><strong>Fecha de Emisión:</strong> {{ pedido.factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge {% if pedido.factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ pedido.factura.estado|title }}
+                                </span>
+                            </p>
+                            {% if pedido.factura.pdf_path %}
+                                <a href="{{ url_for('descargar_factura', id_factura=pedido.factura.id_factura) }}" 
+                                   class="btn btn-success w-100">
+                                    <i class="bi bi-download"></i> Descargar Factura
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <form action="{{ url_for('emitir_factura', id_pedido=pedido.id_pedido) }}" method="POST">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-file-earmark-text"></i> Emitir Factura
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
             

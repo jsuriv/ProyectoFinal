@@ -6,20 +6,30 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Gestión de Usuarios</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('crear_usuario') }}" class="btn btn-success">
+                <i class="fas fa-user-plus me-2"></i> Crear Usuario
+            </a>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#filtroModal">
+                <i class="fas fa-filter me-2"></i> Filtros
+            </button>
+        </div>
     </div>
 
     {% if usuarios %}
     <div class="table-responsive">
-        <table class="table">
-            <thead>
+        <table class="table table-hover">
+            <thead class="table-light">
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
                     <th>Dirección</th>
                     <th>Teléfono</th>
                     <th>Fecha de Registro</th>
-                    <th>Acciones</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -28,37 +38,247 @@
                     <td>{{ usuario.id_usuario }}</td>
                     <td>{{ usuario.nombre }}</td>
                     <td>{{ usuario.email }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if usuario.tipo_usuario == 'admin' %}
+                                <i class="fas fa-user-shield text-danger me-2"></i>
+                                <span class="badge bg-danger">Administrador</span>
+                            {% elif usuario.tipo_usuario == 'vendedor' %}
+                                <i class="fas fa-user-tie text-warning me-2"></i>
+                                <span class="badge bg-warning text-dark">Vendedor</span>
+                            {% else %}
+                                <i class="fas fa-user text-info me-2"></i>
+                                <span class="badge bg-info">Cliente</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if usuario.estado == 'activo' %}
+                                <i class="fas fa-circle text-success me-2"></i>
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <i class="fas fa-circle text-secondary me-2"></i>
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </td>
                     <td>{{ usuario.direccion or 'No especificada' }}</td>
                     <td>{{ usuario.telefono or 'No especificado' }}</td>
                     <td>{{ usuario.fecha_registro.strftime('%d/%m/%Y %H:%M') }}</td>
                     <td>
-                        <a href="{{ url_for('editar_usuario', id=usuario.id_usuario) }}" 
-                           class="btn btn-sm btn-warning">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
-                        {% if usuario.id_usuario != current_user.id_usuario %}
-                        <a href="{{ url_for('eliminar_usuario', id=usuario.id_usuario) }}" 
-                           class="btn btn-sm btn-danger"
-                           onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </a>
-                        {% endif %}
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" 
+                                    class="btn btn-sm btn-primary" 
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-placement="top" 
+                                    title="Editar información del usuario"
+                                    onclick="window.location.href='{{ url_for('editar_usuario', id=usuario.id_usuario) }}'">
+                                <i class="fas fa-edit me-1"></i> Editar
+                            </button>
+                            
+                            {% if usuario.id_usuario != current_user.id_usuario %}
+                                <button type="button" 
+                                        class="btn btn-sm {% if usuario.estado == 'activo' %}btn-warning{% else %}btn-success{% endif %}" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        title="{% if usuario.estado == 'activo' %}Desactivar acceso del usuario{% else %}Activar acceso del usuario{% endif %}"
+                                        onclick="confirmarCambioEstado('{{ usuario.id_usuario }}', '{{ usuario.estado }}', '{{ usuario.nombre }}')">
+                                    <i class="fas {% if usuario.estado == 'activo' %}fa-user-slash me-1{% else %}fa-user-check me-1{% endif %}"></i>
+                                    {% if usuario.estado == 'activo' %}Desactivar{% else %}Activar{% endif %}
+                                </button>
+                                
+                                <button type="button" 
+                                        class="btn btn-sm btn-danger" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        title="Eliminar usuario del sistema"
+                                        onclick="confirmarEliminacion('{{ usuario.id_usuario }}', '{{ usuario.nombre }}')">
+                                    <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Paginación -->
+    {% if usuarios.pages > 1 %}
+    <nav aria-label="Navegación de páginas" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if usuarios.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_usuarios', page=usuarios.prev_num, **request.args) }}">
+                    <i class="fas fa-chevron-left"></i> Anterior
+                </a>
+            </li>
+            {% endif %}
+
+            {% for page in usuarios.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == usuarios.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_usuarios', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if usuarios.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin_usuarios', page=usuarios.next_num, **request.args) }}">
+                    Siguiente <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
     {% else %}
     <div class="alert alert-info">
-        No hay usuarios registrados.
+        <i class="fas fa-info-circle me-2"></i> No hay usuarios registrados.
     </div>
     {% endif %}
 
     <div class="mt-3">
         <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            <i class="fas fa-arrow-left me-2"></i> Volver al Dashboard
         </a>
     </div>
 </div>
+
+<!-- Modal de Confirmación para Cambio de Estado -->
+<div class="modal fade" id="confirmarEstadoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Cambio de Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="mensajeEstado"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="#" id="btnConfirmarEstado" class="btn btn-primary">Confirmar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminación -->
+<div class="modal fade" id="confirmarEliminacionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="mensajeEliminacion"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="#" id="btnConfirmarEliminacion" class="btn btn-danger">Eliminar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Filtros -->
+<div class="modal fade" id="filtroModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filtrar Usuarios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="GET" action="{{ url_for('admin_usuarios') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ request.args.get('nombre', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ request.args.get('email', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label">Tipo de Usuario</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="">Todos</option>
+                            <option value="admin" {% if request.args.get('tipo') == 'admin' %}selected{% endif %}>Administrador</option>
+                            <option value="vendedor" {% if request.args.get('tipo') == 'vendedor' %}selected{% endif %}>Vendedor</option>
+                            <option value="usuario" {% if request.args.get('tipo') == 'usuario' %}selected{% endif %}>Cliente</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-select" id="estado" name="estado">
+                            <option value="">Todos</option>
+                            <option value="activo" {% if request.args.get('estado') == 'activo' %}selected{% endif %}>Activo</option>
+                            <option value="inactivo" {% if request.args.get('estado') == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Función para confirmar cambio de estado
+function confirmarCambioEstado(id, estado, nombre) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmarEstadoModal'));
+    const mensaje = document.getElementById('mensajeEstado');
+    const btnConfirmar = document.getElementById('btnConfirmarEstado');
+    
+    if (estado === 'activo') {
+        mensaje.innerHTML = `¿Estás seguro de que deseas desactivar al usuario <strong>${nombre}</strong>?`;
+        btnConfirmar.classList.remove('btn-success');
+        btnConfirmar.classList.add('btn-danger');
+        btnConfirmar.textContent = 'Desactivar';
+    } else {
+        mensaje.innerHTML = `¿Estás seguro de que deseas activar al usuario <strong>${nombre}</strong>?`;
+        btnConfirmar.classList.remove('btn-danger');
+        btnConfirmar.classList.add('btn-success');
+        btnConfirmar.textContent = 'Activar';
+    }
+    
+    btnConfirmar.href = `/admin/usuario/toggle_status/${id}`;
+    modal.show();
+}
+
+// Función para confirmar eliminación
+function confirmarEliminacion(id, nombre) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmarEliminacionModal'));
+    const mensaje = document.getElementById('mensajeEliminacion');
+    const btnConfirmar = document.getElementById('btnConfirmarEliminacion');
+    
+    mensaje.innerHTML = `¿Estás seguro de que deseas eliminar al usuario <strong>${nombre}</strong>? Esta acción no se puede deshacer.`;
+    btnConfirmar.href = `/admin/usuario/eliminar/${id}`;
+    modal.show();
+}
+</script>
 {% endblock %} 

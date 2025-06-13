@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Editar Perfil</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('actualizar_perfil') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre Completo *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" 
+                                   value="{{ current_user.nombre }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   value="{{ current_user.telefono or '' }}" 
+                                   pattern="[0-9]{7,10}" title="Ingrese un número de teléfono válido (7-10 dígitos)">
+                            <div class="form-text">Formato: 7-10 dígitos</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <textarea class="form-control" id="direccion" name="direccion" 
+                                      rows="3">{{ current_user.direccion or '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="nit" class="form-label">NIT</label>
+                            <input type="text" class="form-control" id="nit" name="nit" 
+                                   value="{{ current_user.nit or '' }}" 
+                                   pattern="[0-9]{11}" title="El NIT debe tener 11 dígitos">
+                            <div class="form-text">Formato: 11 dígitos</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i> Guardar Cambios
+                            </button>
+                            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

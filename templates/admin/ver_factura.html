@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Factura {{ factura.numero_factura }} - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Factura {{ factura.numero_factura }}</h4>
+                    <div>
+                        <a href="{{ url_for('descargar_factura', id_factura=factura.id_factura) }}" 
+                           class="btn btn-success">
+                            <i class="bi bi-download"></i> Descargar PDF
+                        </a>
+                        {% if factura.estado == 'emitida' %}
+                        <button type="button" class="btn btn-danger" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#anularModal">
+                            <i class="bi bi-x-circle"></i> Anular
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Información de la Empresa -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Datos de la Empresa</h5>
+                            <p class="mb-1"><strong>Sistema de Ventas de Electrónicos</strong></p>
+                            <p class="mb-1">NIT: 1234567890</p>
+                            <p class="mb-1">Dirección: Av. Principal #123</p>
+                            <p class="mb-1">Teléfono: (591) 123-4567</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <h5>Datos de la Factura</h5>
+                            <p class="mb-1"><strong>Fecha de Emisión:</strong> {{ factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</p>
+                            <p class="mb-1"><strong>Estado:</strong> 
+                                <span class="badge {% if factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ factura.estado|title }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Información del Cliente -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5>Datos del Cliente</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Nombre:</strong> {{ factura.pedido.usuario.nombre }}</p>
+                                    <p class="mb-1"><strong>NIT:</strong> {{ factura.pedido.usuario.nit }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Dirección:</strong> {{ factura.pedido.direccion_envio }}</p>
+                                    <p class="mb-1"><strong>Teléfono:</strong> {{ factura.pedido.telefono }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productos -->
+                    <h5>Productos</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in factura.pedido.detalles %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if detalle.producto.imagen %}
+                                            <img src="{{ url_for('serve_image', filename=detalle.producto.imagen) }}" 
+                                                 alt="{{ detalle.producto.nombre }}" 
+                                                 class="img-thumbnail me-2" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% endif %}
+                                            {{ detalle.producto.nombre }}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ detalle.cantidad }}</td>
+                                    <td class="text-end">${{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                                    <td class="text-end">${{ "%.2f"|format(detalle.subtotal) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                    <td class="text-end">${{ "%.2f"|format(factura.subtotal) }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>IVA (13%):</strong></td>
+                                    <td class="text-end">${{ "%.2f"|format(factura.iva) }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-end"><strong>${{ "%.2f"|format(factura.total) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Historial de Estados -->
+                    <h5 class="mt-4">Historial de Estados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Usuario</th>
+                                    <th>Observación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for estado in factura.estados %}
+                                <tr>
+                                    <td>{{ estado.fecha_cambio.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        <span class="badge {% if estado.estado == 'emitida' %}bg-success
+                                                         {% elif estado.estado == 'anulada' %}bg-danger
+                                                         {% elif estado.estado == 'reimpresa' %}bg-info
+                                                         {% else %}bg-warning{% endif %}">
+                                            {{ estado.estado|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ estado.admin.nombre if estado.admin else 'Sistema' }}</td>
+                                    <td>{{ estado.observacion }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin_facturas') }}" class="btn btn-secondary w-100 mb-2">
+                        <i class="bi bi-arrow-left"></i> Volver a Facturas
+                    </a>
+                    <a href="{{ url_for('ver_pedido_admin', id=factura.id_pedido) }}" class="btn btn-info w-100">
+                        <i class="bi bi-box"></i> Ver Pedido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Anular Factura -->
+<div class="modal fade" id="anularModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Anular Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('anular_factura', id=factura.id_factura) }}" method="POST">
+                <div class="modal-body">
+                    <p>¿Está seguro que desea anular la factura {{ factura.numero_factura }}?</p>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de Anulación</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Anular Factura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 
