@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ producto.nombre }} - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            {% if producto.imagen %}
+            <img src="{{ url_for('static', filename='images/productos/' + producto.imagen) }}" 
+                 class="img-fluid rounded" alt="{{ producto.nombre }}">
+            {% else %}
+            <div class="bg-light rounded p-5 text-center">
+                <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ producto.nombre }}</h1>
+            <p class="text-muted">Categoría: {{ producto.categoria.nombre }}</p>
+            <h2 class="text-primary mb-4">${{ "%.2f"|format(producto.precio) }}</h2>
+            <p class="mb-4">{{ producto.descripcion }}</p>
+            
+            <div class="mb-4">
+                <p class="mb-2">
+                    <strong>Stock disponible:</strong> 
+                    {% if producto.stock > 0 %}
+                    <span class="text-success">{{ producto.stock }} unidades</span>
+                    {% else %}
+                    <span class="text-danger">Agotado</span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            {% if producto.stock > 0 %}
+            <form action="{{ url_for('agregar_al_carrito') }}" method="POST" class="mb-4">
+                <input type="hidden" name="id_producto" value="{{ producto.id_producto }}">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <label for="cantidad" class="form-label">Cantidad:</label>
+                        <div class="input-group" style="width: 150px;">
+                            <button type="button" class="btn btn-outline-secondary" onclick="decrementarCantidad()">-</button>
+                            <input type="number" class="form-control text-center" id="cantidad" name="cantidad" 
+                                   value="1" min="1" max="{{ producto.stock }}" 
+                                   onchange="validarCantidad(this)">
+                            <button type="button" class="btn btn-outline-secondary" onclick="incrementarCantidad()">+</button>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% else %}
+            <button class="btn btn-secondary btn-lg" disabled>
+                <i class="bi bi-x-circle"></i> Producto Agotado
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function validarCantidad(input) {
+    const max = parseInt(input.getAttribute('max'));
+    const min = parseInt(input.getAttribute('min'));
+    let value = parseInt(input.value);
+    
+    if (isNaN(value) || value < min) {
+        value = min;
+    } else if (value > max) {
+        value = max;
+    }
+    
+    input.value = value;
+}
+
+function incrementarCantidad() {
+    const input = document.getElementById('cantidad');
+    const max = parseInt(input.getAttribute('max'));
+    let value = parseInt(input.value);
+    
+    if (value < max) {
+        input.value = value + 1;
+    }
+}
+
+function decrementarCantidad() {
+    const input = document.getElementById('cantidad');
+    const min = parseInt(input.getAttribute('min'));
+    let value = parseInt(input.value);
+    
+    if (value > min) {
+        input.value = value - 1;
+    }
+}
+</script>
+{% endblock %} 

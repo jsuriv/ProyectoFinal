@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Pedido #{{ pedido.id_pedido }} - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Detalles del Pedido #{{ pedido.id_pedido }}</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Información del Cliente -->
+                    <h5>Información del Cliente</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Nombre:</strong> {{ pedido.usuario.nombre }}</p>
+                            <p><strong>Email:</strong> {{ pedido.usuario.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Teléfono:</strong> {{ pedido.telefono }}</p>
+                            <p><strong>Dirección:</strong> {{ pedido.direccion_envio }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Productos -->
+                    <h5>Productos</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in pedido.detalles %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if detalle.producto.imagen %}
+                                            <img src="{{ url_for('serve_image', filename=detalle.producto.imagen) }}" 
+                                                 alt="{{ detalle.producto.nombre }}" 
+                                                 class="img-thumbnail me-2" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% endif %}
+                                            {{ detalle.producto.nombre }}
+                                        </div>
+                                    </td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>${{ detalle.precio_unitario|round(2) }}</td>
+                                    <td>${{ detalle.subtotal|round(2) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td><strong>${{ pedido.total|round(2) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Estado del Pedido</h4>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('actualizar_estado_pedido', id=pedido.id_pedido) }}" method="POST">
+                        <div class="mb-3">
+                            <label for="estado" class="form-label">Estado Actual</label>
+                            <select class="form-select" id="estado" name="estado" required>
+                                <option value="pendiente" {% if pedido.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                                <option value="en_proceso" {% if pedido.estado == 'en_proceso' %}selected{% endif %}>En Proceso</option>
+                                <option value="enviado" {% if pedido.estado == 'enviado' %}selected{% endif %}>Enviado</option>
+                                <option value="entregado" {% if pedido.estado == 'entregado' %}selected{% endif %}>Entregado</option>
+                                <option value="cancelado" {% if pedido.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            Actualizar Estado
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="mt-3">
+                        <p><strong>Fecha del Pedido:</strong><br>
+                        {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</p>
+                        
+                        {% if pedido.fecha_actualizacion %}
+                        <p><strong>Última Actualización:</strong><br>
+                        {{ pedido.fecha_actualizacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h4>Acciones</h4>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary w-100 mb-2">
+                        <i class="bi bi-arrow-left"></i> Volver al Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

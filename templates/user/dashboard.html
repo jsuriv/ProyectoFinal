@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Cuenta - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Menú lateral -->
+        <div class="col-md-3">
+            <div class="list-group mb-4">
+                <a href="{{ url_for('user_dashboard') }}" class="list-group-item list-group-item-action active">
+                    <i class="bi bi-person"></i> Mi Perfil
+                </a>
+                <a href="{{ url_for('carrito') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-cart"></i> Mi Carrito
+                </a>
+                <a href="{{ url_for('mis_pedidos') }}" class="list-group-item list-group-item-action">
+                    <i class="bi bi-box"></i> Mis Pedidos
+                </a>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Mi Perfil</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('actualizar_perfil') }}">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" 
+                                   value="{{ current_user.nombre }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" 
+                                   value="{{ current_user.direccion }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" 
+                                   value="{{ current_user.telefono }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Nueva Contraseña (dejar en blanco para mantener la actual)</label>
+                            <input type="password" class="form-control" id="password" name="password">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Cambios
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Pedidos -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h2 class="mb-0">Mis Pedidos</h2>
+                </div>
+                <div class="card-body">
+                    {% if pedidos %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos %}
+                                <tr>
+                                    <td>#{{ pedido.id_pedido }}</td>
+                                    <td>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>${{ "%.2f"|format(pedido.total) }}</td>
+                                    <td>
+                                        <span class="badge {% if pedido.estado == 'entregado' %}bg-success
+                                                         {% elif pedido.estado == 'pendiente' %}bg-warning
+                                                         {% elif pedido.estado == 'cancelado' %}bg-danger
+                                                         {% else %}bg-info{% endif %}">
+                                            {{ pedido.estado|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('ver_pedido', id=pedido.id_pedido) }}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> Ver Detalles
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No tienes pedidos realizados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

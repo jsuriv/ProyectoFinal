@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Pedido #{{ pedido.id_pedido }} - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Detalles del Pedido #{{ pedido.id_pedido }}</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver al Panel
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información del Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>ID del Pedido:</th>
+                            <td>#{{ pedido.id_pedido }}</td>
+                        </tr>
+                        <tr>
+                            <th>Fecha:</th>
+                            <td>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>Estado:</th>
+                            <td>
+                                <span class="badge bg-{{ 'success' if pedido.estado == 'entregado' else 'warning' }}">
+                                    {{ pedido.estado|title }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Método de Pago:</th>
+                            <td>{{ pedido.metodo_pago or 'No especificado' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Dirección de Entrega:</th>
+                            <td>{{ pedido.direccion_envio }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información del Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Nombre:</th>
+                            <td>{{ pedido.usuario.nombre }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{{ pedido.usuario.email }}</td>
+                        </tr>
+                        <tr>
+                            <th>Teléfono:</th>
+                            <td>{{ pedido.usuario.telefono or 'No especificado' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Productos</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio Unitario</th>
+                            <th>Cantidad</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detalle in pedido.detalles %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if detalle.producto.imagen %}
+                                    <img src="{{ url_for('static', filename=detalle.producto.imagen) }}" 
+                                         alt="{{ detalle.producto.nombre }}" 
+                                         class="img-thumbnail me-3" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ detalle.producto.nombre }}</h6>
+                                        <small class="text-muted">ID: {{ detalle.producto.id_producto }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                            <td>{{ detalle.cantidad }}</td>
+                            <td>${{ "%.2f"|format(detalle.subtotal) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td><strong>${{ "%.2f"|format(pedido.total) }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Actualizar Estado</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('actualizar_estado_pedido', id=pedido.id_pedido) }}" class="d-flex align-items-center">
+                <label for="estado" class="form-label me-2 mb-0">Estado:</label>
+                <select class="form-select w-auto me-2" id="estado" name="estado">
+                    <option value="pendiente" {{ 'selected' if pedido.estado == 'pendiente' else '' }}>Pendiente</option>
+                    <option value="en_proceso" {{ 'selected' if pedido.estado == 'en_proceso' else '' }}>En Proceso</option>
+                    <option value="enviado" {{ 'selected' if pedido.estado == 'enviado' else '' }}>Enviado</option>
+                    <option value="entregado" {{ 'selected' if pedido.estado == 'entregado' else '' }}>Entregado</option>
+                    <option value="cancelado" {{ 'selected' if pedido.estado == 'cancelado' else '' }}>Cancelado</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Actualizar Estado</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

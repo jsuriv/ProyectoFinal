@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Administración - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Panel de Administración</h2>
+    
+    <!-- Resumen -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Ventas</h5>
+                    <h3 class="card-text">${{ total_ventas|default(0)|round(2) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pedidos Pendientes</h5>
+                    <h3 class="card-text">{{ pedidos_pendientes|default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Usuarios</h5>
+                    <h3 class="card-text">{{ total_usuarios|default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Productos</h5>
+                    <h3 class="card-text">{{ total_productos|default(0) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos Pendientes -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Pedidos Pendientes</h4>
+        </div>
+        <div class="card-body">
+            {% if pedidos %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in pedidos %}
+                        <tr>
+                            <td>#{{ pedido.id_pedido }}</td>
+                            <td>{{ pedido.usuario.nombre }}</td>
+                            <td>${{ pedido.total|round(2) }}</td>
+                            <td>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>
+                                <span class="badge bg-warning">{{ pedido.estado|title }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('ver_pedido', id=pedido.id_pedido) }}" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">No hay pedidos pendientes</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Gestión de Productos</h4>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin_productos') }}" class="btn btn-primary">
+                        <i class="fas fa-box"></i> Ver Productos
+                    </a>
+                    <a href="{{ url_for('agregar_producto') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Agregar Producto
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Gestión de Usuarios</h4>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin_usuarios') }}" class="btn btn-primary">
+                        <i class="fas fa-users"></i> Ver Usuarios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

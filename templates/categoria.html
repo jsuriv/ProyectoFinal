@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ categoria.nombre }} - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ categoria.nombre }}</h2>
+            {% if categoria.descripcion %}
+            <p class="text-muted">{{ categoria.descripcion }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        {% for producto in productos %}
+        <div class="col">
+            <div class="card h-100">
+                {% if producto.imagen %}
+                <img src="{{ url_for('static', filename=producto.imagen) }}" 
+                     class="card-img-top" 
+                     alt="{{ producto.nombre }}"
+                     style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                     style="height: 200px;">
+                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ producto.nombre }}</h5>
+                    <p class="card-text text-muted">
+                        {{ producto.descripcion[:100] }}{% if producto.descripcion|length > 100 %}...{% endif %}
+                    </p>
+                    <p class="card-text">
+                        <strong class="text-primary">${{ "%.2f"|format(producto.precio) }}</strong>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Stock disponible: {{ producto.stock }}
+                        </small>
+                    </p>
+                </div>
+                
+                <div class="card-footer bg-white border-top-0">
+                    <div class="d-grid">
+                        <a href="{{ url_for('ver_producto', id=producto.id_producto) }}" 
+                           class="btn btn-primary">
+                            Ver Detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No hay productos disponibles en esta categoría.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 
