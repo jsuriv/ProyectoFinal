@@ -9,8 +9,8 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import func
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_secreta_por_defecto')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'mysql://root:@localhost/sistema_electronicos')
+app.config['SECRET_KEY'] = 'tu_clave_secreta_aqui'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/sistema_electronicos'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = './images'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
