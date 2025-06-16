@@ -57,7 +57,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ producto.nombre }}</h5>
                             <p class="card-text">{{ producto.descripcion[:100] }}...</p>
-                            <p class="card-text"><strong>Precio: ${{ "%.2f"|format(producto.precio) }}</strong></p>
+                            <p class="card-text"><strong>Precio: Bs. {{ "%.2f"|format(producto.precio) }}</strong></p>
                             <div class="d-grid">
                                 <form action="{{ url_for('agregar_al_carrito') }}" method="POST" class="d-inline">
                                     <input type="hidden" name="id_producto" value="{{ producto.id_producto }}">

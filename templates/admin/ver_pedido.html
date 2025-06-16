@@ -51,15 +51,15 @@
                                         </div>
                                     </td>
                                     <td>{{ detalle.cantidad }}</td>
-                                    <td>${{ detalle.precio_unitario|round(2) }}</td>
-                                    <td>${{ detalle.subtotal|round(2) }}</td>
+                                    <td>Bs. {{ detalle.precio_unitario|round(2) }}</td>
+                                    <td>Bs. {{ detalle.subtotal|round(2) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td><strong>${{ pedido.total|round(2) }}</strong></td>
+                                    <td><strong>Bs. {{ pedido.total|round(2) }}</strong></td>
                                 </tr>
                             </tfoot>
                         </table>

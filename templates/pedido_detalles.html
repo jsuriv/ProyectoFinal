@@ -78,16 +78,16 @@
                             </div>
                         </div>
                     </td>
-                    <td>${{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                    <td>Bs. {{ "%.2f"|format(detalle.precio_unitario) }}</td>
                     <td>{{ detalle.cantidad }}</td>
-                    <td>${{ "%.2f"|format(detalle.subtotal) }}</td>
+                    <td>Bs. {{ "%.2f"|format(detalle.subtotal) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                    <td><strong>${{ "%.2f"|format(pedido.total) }}</strong></td>
+                    <td><strong>Bs. {{ "%.2f"|format(pedido.total) }}</strong></td>
                 </tr>
             </tfoot>
         </table>

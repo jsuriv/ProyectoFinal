@@ -117,7 +117,7 @@
                                     <td>{{ pedido.numero_factura }}</td>
                                     <td>{{ pedido.usuario.nombre }}</td>
                                     <td>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
-                                    <td>${{ "%.2f"|format(pedido.total) }}</td>
+                                    <td>Bs. {{ "%.2f"|format(pedido.total) }}</td>
                                     <td>
                                         <span class="badge {% if pedido.estado == 'entregado' %}bg-success
                                                          {% elif pedido.estado == 'cancelado' %}bg-danger

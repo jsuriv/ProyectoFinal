@@ -1,15 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, g, send_file
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, g, send_file, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 import re
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -17,20 +17,29 @@ from functools import wraps
 from io import BytesIO
 import paypalrestsdk
 from dotenv import load_dotenv
+from reportlab.pdfgen import canvas
+import qrcode
+from PIL import Image
+import base64
 
 # Cargar variables de entorno
 load_dotenv()
 
 # Configurar PayPal
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
+PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID', 'tu_client_id_aqui')
+PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET', 'tu_client_secret_aqui')
+PAYPAL_SIMULATION = os.getenv('PAYPAL_SIMULATION', 'true').lower() == 'true'
+
 paypalrestsdk.configure({
-    "mode": os.getenv('PAYPAL_MODE', 'sandbox'),  # sandbox o live
-    "client_id": os.getenv('PAYPAL_CLIENT_ID'),
-    "client_secret": os.getenv('PAYPAL_CLIENT_SECRET')
+    "mode": PAYPAL_MODE,
+    "client_id": PAYPAL_CLIENT_ID,
+    "client_secret": PAYPAL_CLIENT_SECRET
 })
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'tu_clave_secreta_aqui'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/sistema_electronicos'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'tu_clave_secreta_aqui')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{os.getenv('DB_USER', 'root')}:{os.getenv('DB_PASSWORD', '')}@{os.getenv('DB_HOST', 'localhost')}/{os.getenv('DB_NAME', 'sistema_electronicos')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = './images'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
@@ -149,6 +158,7 @@ class Factura(db.Model):
     id_factura = db.Column(db.Integer, primary_key=True)
     id_pedido = db.Column(db.Integer, db.ForeignKey('pedidos.id_pedido', ondelete='CASCADE'), nullable=False)
     numero_factura = db.Column(db.String(20), unique=True, nullable=False)
+    voucher_number = db.Column(db.String(20), unique=True, nullable=False)
     fecha_emision = db.Column(db.DateTime, default=datetime.utcnow)
     subtotal = db.Column(db.Numeric(10, 2), nullable=False)
     iva = db.Column(db.Numeric(10, 2), nullable=False)
@@ -298,7 +308,7 @@ def agregar_al_carrito():
 def carrito():
     try:
         items_carrito = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-        total = sum(item.producto.precio * item.cantidad for item in items_carrito)
+        total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_carrito)
         return render_template('carrito.html', items=items_carrito, total=total)
     except Exception as e:
         print(f"Error en carrito: {str(e)}")  # Para debugging
@@ -375,7 +385,7 @@ def checkout():
             flash('El carrito está vacío')
             return redirect(url_for('carrito'))
         
-        total = sum(item.producto.precio * item.cantidad for item in items)
+        total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
         
         pedido = Pedido(
             id_usuario=current_user.id_usuario,
@@ -383,7 +393,8 @@ def checkout():
             direccion_envio=direccion,
             telefono=current_user.telefono,
             estado='pendiente',
-            metodo_pago=metodo_pago
+            metodo_pago=metodo_pago,
+            fecha_actualizacion=datetime.utcnow()
         )
         db.session.add(pedido)
         db.session.flush()
@@ -412,7 +423,7 @@ def checkout():
         return redirect(url_for('user_dashboard'))
     
     items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-    total = sum(item.producto.precio * item.cantidad for item in items)
+    total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
     return render_template('checkout.html', items=items, total=total)
 
 @app.route('/registro', methods=['GET', 'POST'])
@@ -756,10 +767,11 @@ def agregar_producto():
         imagen_filename = None
         if imagen and imagen.filename:
             filename = secure_filename(imagen.filename)
-            imagen_path = os.path.join('static', 'images', 'productos', filename)
-            os.makedirs(os.path.dirname(imagen_path), exist_ok=True)
+            imagen_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # No es necesario crear subdirectorios si UPLOAD_FOLDER ya apunta a la raíz de las imágenes
+            # os.makedirs(os.path.dirname(imagen_path), exist_ok=True) # Esta línea se eliminará o comentará
             imagen.save(imagen_path)
-            imagen_filename = os.path.join('images', 'productos', filename)
+            imagen_filename = filename # Guardar solo el nombre del archivo
         try:
             producto = Producto(
                 nombre=nombre,
@@ -790,6 +802,11 @@ def editar_producto(id):
     producto = Producto.query.get_or_404(id)
     categorias = Categoria.query.all()
     
+    # Limpiar la ruta de la imagen para display y operaciones de eliminación
+    # Asegura que solo el nombre del archivo se use, independientemente de cómo se haya guardado previamente
+    if producto.imagen and ('/' in producto.imagen or '\\' in producto.imagen):
+        producto.imagen = os.path.basename(producto.imagen)
+    
     if request.method == 'POST':
         try:
             producto.nombre = request.form['nombre']
@@ -803,16 +820,19 @@ def editar_producto(id):
                 imagen = request.files['imagen']
                 if imagen and imagen.filename:
                     # Eliminar imagen anterior si existe
-                    if producto.imagen:
+                    if producto.imagen: # Verificar si un nombre de archivo existe después de la limpieza
                         try:
-                            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], producto.imagen))
-                        except:
-                            pass
+                            # Construir la ruta completa para la eliminación usando UPLOAD_FOLDER y el nombre de archivo
+                            old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], producto.imagen)
+                            if os.path.exists(old_image_path): # Verificar si el archivo realmente existe
+                                os.remove(old_image_path)
+                        except Exception as e:
+                            print(f"Error al eliminar imagen antigua: {e}") # Registrar el error
                     
                     # Guardar nueva imagen
                     filename = secure_filename(imagen.filename)
                     imagen.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    producto.imagen = filename
+                    producto.imagen = filename # Almacenar solo el nombre del archivo en la DB
             
             db.session.commit()
             flash('Producto actualizado exitosamente.', 'success')
@@ -1129,7 +1149,7 @@ def procesar_pedido():
         numero_factura = f"F{datetime.now().strftime('%Y%m%d')}{Pedido.query.count() + 1:04d}"
         
         # Calcular totales e impuestos
-        subtotal = sum(item.producto.precio * item.cantidad for item in items)
+        subtotal = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
         iva = subtotal * Decimal('0.13')  # 13% IVA
         total = subtotal + iva
         
@@ -1143,7 +1163,8 @@ def procesar_pedido():
             direccion_envio=current_user.direccion,
             telefono=current_user.telefono,
             estado='pendiente',
-            metodo_pago=request.form.get('metodo_pago')
+            metodo_pago=request.form.get('metodo_pago'),
+            fecha_actualizacion=datetime.utcnow()
         )
         db.session.add(pedido)
         db.session.flush()
@@ -1162,6 +1183,10 @@ def procesar_pedido():
             # Actualizar stock
             producto = item.producto
             producto.stock -= item.cantidad
+            if producto.stock < 0:
+                db.session.rollback()
+                flash('Stock insuficiente para algunos productos')
+                return redirect(url_for('carrito'))
         
         # Limpiar carrito
         Carrito.query.filter_by(id_usuario=current_user.id_usuario).delete()
@@ -1335,10 +1360,15 @@ def emitir_factura(id_pedido):
         nuevo_numero = 1 if not ultima_factura else int(ultima_factura.numero_factura.split('-')[1]) + 1
         numero_factura = f'FACT-{nuevo_numero:06d}'
         
+        # Generar número de voucher único
+        fecha_actual = datetime.utcnow()
+        voucher_number = f'VOU-{fecha_actual.strftime("%Y%m%d")}-{nuevo_numero:06d}'
+        
         # Crear la factura con los totales calculados
         factura = Factura(
             id_pedido=pedido.id_pedido,
             numero_factura=numero_factura,
+            voucher_number=voucher_number,
             subtotal=subtotal,
             iva=iva,
             total=total
@@ -1354,31 +1384,19 @@ def emitir_factura(id_pedido):
         )
         db.session.add(estado_inicial)
         
-        # Guardar cambios antes de generar el PDF
         db.session.commit()
         
-        # Generar PDF
-        pdf_path = generar_pdf_factura(factura)
-        if pdf_path:
-            factura.pdf_path = pdf_path
-            db.session.commit()
-            flash('Factura emitida exitosamente', 'success')
-        else:
-            flash('Error al generar el PDF de la factura', 'danger')
+        # Generar PDF de la factura
+        generar_pdf_factura(factura)
         
-        # Redirigir según el tipo de usuario
-        if current_user.is_admin():
-            return redirect(url_for('ver_pedido_admin', id=id_pedido))
-        else:
-            return redirect(url_for('ver_pedido', id=id_pedido))
-            
+        flash('Factura emitida exitosamente', 'success')
+        return redirect(url_for('ver_pedido', id=id_pedido))
+        
     except Exception as e:
         db.session.rollback()
-        flash(f'Error al emitir la factura: {str(e)}', 'danger')
-        if current_user.is_admin():
-            return redirect(url_for('ver_pedido_admin', id=id_pedido))
-        else:
-            return redirect(url_for('ver_pedido', id=id_pedido))
+        flash('Error al emitir la factura', 'danger')
+        print(f"Error al emitir factura: {str(e)}")
+        return redirect(url_for('ver_pedido', id=id_pedido))
 
 @app.route('/factura/descargar/<int:id_factura>')
 @login_required
@@ -1421,72 +1439,143 @@ def descargar_factura(id_factura):
 
 def generar_pdf_factura(factura):
     try:
-        # Crear el PDF
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        # Crear el directorio si no existe
+        pdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'facturas')
+        os.makedirs(pdf_dir, exist_ok=True)
+        
+        # Nombre del archivo PDF
+        pdf_filename = f'factura_{factura.numero_factura}.pdf'
+        pdf_path = os.path.join(pdf_dir, pdf_filename)
+        
+        # Crear el documento PDF con márgenes personalizados
+        doc = SimpleDocTemplate(
+            pdf_path,
+            pagesize=letter,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
+        
+        # Lista para almacenar los elementos del PDF
         elements = []
         
-        # Estilos
+        # Estilos personalizados
         styles = getSampleStyleSheet()
+        
+        # Estilo para el título principal
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=24,
+            textColor=colors.HexColor('#1a237e'),  # Azul oscuro
             spaceAfter=30,
             alignment=1  # Centrado
         )
+        
+        # Estilo para subtítulos
         subtitle_style = ParagraphStyle(
             'CustomSubtitle',
             parent=styles['Heading2'],
-            fontSize=16,
-            spaceAfter=20,
-            alignment=1
+            fontSize=14,
+            textColor=colors.HexColor('#303f9f'),  # Azul medio
+            spaceAfter=12,
+            spaceBefore=12
         )
-        normal_style = styles['Normal']
-        bold_style = ParagraphStyle(
-            'Bold',
+        
+        # Estilo para texto normal
+        normal_style = ParagraphStyle(
+            'CustomNormal',
             parent=styles['Normal'],
-            fontName='Helvetica-Bold'
+            fontSize=10,
+            spaceAfter=6
         )
         
-        # Datos de la empresa
-        empresa = {
-            'nombre': 'TechStore',
-            'direccion': 'Calle Apruebenos Ingeniero #100',
-            'telefono': '+591 75781303',
-            'email': 'techstore@gmail.com',
-            'nit': '0614-123456-789-0',
-            'nrc': '123456-0'
-        }
+        # Estilo para texto en negrita
+        bold_style = ParagraphStyle(
+            'CustomBold',
+            parent=styles['Normal'],
+            fontSize=10,
+            fontName='Helvetica-Bold',
+            spaceAfter=6
+        )
         
-        # Encabezado
-        elements.append(Paragraph("FACTURA", title_style))
-        elements.append(Paragraph(f"N° {factura.numero_factura}", subtitle_style))
+        # Estilo para totales
+        total_style = ParagraphStyle(
+            'CustomTotal',
+            parent=styles['Normal'],
+            fontSize=12,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#1a237e'),  # Azul oscuro
+            spaceAfter=6
+        )
         
-        # Información de la empresa
-        elements.append(Paragraph(empresa['nombre'], bold_style))
-        elements.append(Paragraph(f"NIT: {empresa['nit']}", normal_style))
-        elements.append(Paragraph(f"NRC: {empresa['nrc']}", normal_style))
-        elements.append(Paragraph(empresa['direccion'], normal_style))
-        elements.append(Paragraph(f"Tel: {empresa['telefono']}", normal_style))
-        elements.append(Paragraph(f"Email: {empresa['email']}", normal_style))
+        # Logo y encabezado
+        elements.append(Paragraph("TECHSTORE", title_style))
+        elements.append(Spacer(1, 20))
+        
+        # Línea decorativa
+        elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1a237e'), spaceBefore=10, spaceAfter=10))
+        
+        # Información de la empresa y factura en dos columnas
+        empresa_data = [
+            ["DATOS DE LA EMPRESA", "DATOS DE LA FACTURA"],
+            ["TechStore", f"N° Factura: {factura.numero_factura}"],
+            ["NIT: 1234567890", f"N° Voucher: {factura.voucher_number}"],
+            ["Dirección: Calle Apruebenos Ingeniero #100", f"Fecha: {factura.fecha_emision.strftime('%d/%m/%Y %H:%M')}"],
+            ["Teléfono: +591 75781303", f"Estado: {factura.estado.title()}"],
+            ["Email: techstore@gmail.com", ""]
+        ]
+        
+        # Estilo para la tabla de información
+        info_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e8eaf6')),  # Fondo azul claro
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1a237e')),  # Texto azul oscuro
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#c5cae9')),  # Borde azul claro
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ])
+        
+        info_table = Table(empresa_data, colWidths=[250, 250])
+        info_table.setStyle(info_style)
+        elements.append(info_table)
         elements.append(Spacer(1, 20))
         
         # Información del cliente
+        elements.append(Paragraph("DATOS DEL CLIENTE", subtitle_style))
         cliente = factura.pedido.usuario
-        elements.append(Paragraph("DATOS DEL CLIENTE", bold_style))
-        elements.append(Paragraph(f"Nombre: {cliente.nombre}", normal_style))
-        elements.append(Paragraph(f"NIT: {cliente.nit or 'No especificado'}", normal_style))
-        elements.append(Paragraph(f"Email: {cliente.email}", normal_style))
-        elements.append(Paragraph(f"Teléfono: {cliente.telefono}", normal_style))
-        elements.append(Paragraph(f"Dirección: {cliente.direccion}", normal_style))
+        cliente_data = [
+            ["Nombre:", cliente.nombre],
+            ["NIT:", cliente.nit or "No especificado"],
+            ["Email:", cliente.email],
+            ["Teléfono:", cliente.telefono],
+            ["Dirección:", cliente.direccion]
+        ]
+        
+        cliente_style = TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#c5cae9')),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e8eaf6')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1a237e')),
+        ])
+        
+        cliente_table = Table(cliente_data, colWidths=[100, 400])
+        cliente_table.setStyle(cliente_style)
+        elements.append(cliente_table)
         elements.append(Spacer(1, 20))
         
-        # Información del pedido
-        elements.append(Paragraph("DETALLES DEL PEDIDO", bold_style))
-        elements.append(Paragraph(f"Fecha: {factura.pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M')}", normal_style))
-        elements.append(Paragraph(f"Estado: {factura.pedido.estado}", normal_style))
-        elements.append(Spacer(1, 20))
+        # Detalles del pedido
+        elements.append(Paragraph("DETALLES DEL PEDIDO", subtitle_style))
         
         # Calcular subtotales y totales
         subtotal = Decimal('0.00')
@@ -1498,24 +1587,18 @@ def generar_pdf_factura(factura):
             data.append([
                 detalle.producto.nombre,
                 str(detalle.cantidad),
-                f"${detalle.precio_unitario:.2f}",
-                f"${subtotal_producto:.2f}"
+                f"Bs. {detalle.precio_unitario:.2f}",
+                f"Bs. {subtotal_producto:.2f}"
             ])
         
         # Calcular IVA y total
         iva = subtotal * Decimal('0.13')
         total = subtotal + iva
         
-        # Actualizar los valores en la factura
-        factura.subtotal = subtotal
-        factura.iva = iva
-        factura.total = total
-        db.session.commit()
-        
-        # Estilo de la tabla
+        # Estilo para la tabla de productos
         table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1a237e')),  # Fondo azul oscuro
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # Texto blanco
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
@@ -1524,50 +1607,83 @@ def generar_pdf_factura(factura):
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#c5cae9')),
             ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f5f5f5')]),  # Filas alternadas
         ])
         
-        table = Table(data, colWidths=[200, 80, 100, 100])
+        table = Table(data, colWidths=[250, 80, 100, 100])
         table.setStyle(table_style)
         elements.append(table)
         elements.append(Spacer(1, 20))
         
         # Totales
-        elements.append(Paragraph(f"Subtotal: ${subtotal:.2f}", normal_style))
-        elements.append(Paragraph(f"IVA (13%): ${iva:.2f}", normal_style))
-        elements.append(Paragraph(f"Total: ${total:.2f}", bold_style))
+        totales_data = [
+            ["Subtotal:", f"Bs. {subtotal:.2f}"],
+            ["IVA (13%):", f"Bs. {iva:.2f}"],
+            ["Total:", f"Bs. {total:.2f}"]
+        ]
+        
+        totales_style = TableStyle([
+            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#c5cae9')),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e8eaf6')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#1a237e')),
+            ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1a237e')),
+        ])
+        
+        totales_table = Table(totales_data, colWidths=[100, 100])
+        totales_table.setStyle(totales_style)
+        elements.append(totales_table)
         elements.append(Spacer(1, 30))
         
         # Pie de página
-        elements.append(Paragraph("CONDICIONES Y TÉRMINOS", bold_style))
-        elements.append(Paragraph("• Esta factura es un documento legal", normal_style))
-        elements.append(Paragraph("• Los productos tienen garantía de 1 año", normal_style))
-        elements.append(Paragraph("• Para soporte técnico contacte a techstore@gmail.com", normal_style))
-        elements.append(Spacer(1, 20))
+        elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1a237e'), spaceBefore=10, spaceAfter=10))
+        elements.append(Paragraph("CONDICIONES Y TÉRMINOS", subtitle_style))
+        
+        condiciones = [
+            "• Esta factura es un documento legal y oficial",
+            "• Los productos tienen garantía de 1 año",
+            "• Para soporte técnico contacte a techstore@gmail.com",
+            "• Gracias por su preferencia"
+        ]
+        
+        for condicion in condiciones:
+            elements.append(Paragraph(condicion, normal_style))
+        
+        elements.append(Spacer(1, 30))
         
         # Firma
-        elements.append(Paragraph("_______________________", normal_style))
-        elements.append(Paragraph("Firma Autorizada", normal_style))
+        firma_data = [
+            ["_______________________", "_______________________"],
+            ["Firma Autorizada", "Sello de la Empresa"]
+        ]
+        
+        firma_style = TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ])
+        
+        firma_table = Table(firma_data, colWidths=[200, 200])
+        firma_table.setStyle(firma_style)
+        elements.append(firma_table)
         
         # Construir el PDF
         doc.build(elements)
         
-        # Crear directorio si no existe
-        pdf_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'facturas')
-        os.makedirs(pdf_dir, exist_ok=True)
-        
-        # Guardar el PDF
-        pdf_path = os.path.join(pdf_dir, f'factura_{factura.numero_factura}.pdf')
-        
-        with open(pdf_path, 'wb') as f:
-            f.write(buffer.getvalue())
+        # Actualizar la ruta del PDF en la factura
+        factura.pdf_path = pdf_path
+        db.session.commit()
         
         return pdf_path
+        
     except Exception as e:
         print(f"Error al generar PDF: {str(e)}")
-        import traceback
-        traceback.print_exc()
         return None
 
 @app.route('/admin/usuario/crear', methods=['GET', 'POST'])
@@ -1676,15 +1792,49 @@ def cancelar_pedido(id):
     
     return redirect(url_for('user_dashboard'))
 
-@app.route('/paypal/create-payment', methods=['POST'])
+@app.route('/paypal/create-payment', methods=['GET', 'POST'])
 @login_required
 def create_paypal_payment():
     try:
+        print("\n=== Iniciando proceso de pago PayPal ===")
+        print(f"Usuario actual: {current_user.id_usuario}")
+        
         # Obtener el total del carrito
         items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-        total = sum(item.producto.precio * item.cantidad for item in items)
+        print(f"Items en carrito: {len(items)}")
         
-        # Crear el pago en PayPal
+        if not items:
+            print("Error: Carrito vacío")
+            flash('El carrito está vacío', 'error')
+            return redirect(url_for('carrito'))
+            
+        total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
+        print(f"Total del carrito: {total}")
+        
+        # Verificar que el total sea válido
+        if total <= 0:
+            print("Error: Total inválido (menor o igual a 0)")
+            flash('El monto total debe ser mayor a 0', 'error')
+            return redirect(url_for('carrito'))
+        
+        if PAYPAL_SIMULATION:
+            print("Modo simulación activado")
+            # En modo simulación, crear un ID de pago simulado
+            payment_id = f"PAY-SIM-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            session['paypal_payment_id'] = payment_id
+            session['paypal_simulation'] = True
+            subtotal = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
+            iva = subtotal * Decimal('0.13')
+            total = (subtotal + iva).quantize(Decimal('0.01'))
+            session['paypal_amount'] = str(total)
+            session['paypal_user_id'] = current_user.id_usuario
+            
+            print(f"ID de pago simulado creado: {payment_id}")
+            print("Redirigiendo a página de simulación")
+            return redirect(url_for('paypal_simulation'))
+        
+        print("Modo PayPal real activado")
+        # Crear el pago en PayPal (modo real)
         payment = paypalrestsdk.Payment({
             "intent": "sale",
             "payer": {
@@ -1700,33 +1850,229 @@ def create_paypal_payment():
                         "name": "Compra en TechStore",
                         "sku": "TS001",
                         "price": str(total),
-                        "currency": "USD",
+                        "currency": "BOB",
                         "quantity": 1
                     }]
                 },
                 "amount": {
                     "total": str(total),
-                    "currency": "USD"
+                    "currency": "BOB"
                 },
                 "description": "Compra en TechStore"
             }]
         })
 
+        print(f"Configuración PayPal:")
+        print(f"- Mode: {PAYPAL_MODE}")
+        print(f"- Client ID configurado: {'Sí' if PAYPAL_CLIENT_ID else 'No'}")
+        print(f"- Monto: {total}")
+
         if payment.create():
-            # Guardar el ID del pago en la sesión
+            print(f"Pago PayPal creado exitosamente. ID: {payment.id}")
             session['paypal_payment_id'] = payment.id
-            # Redirigir al usuario a PayPal
+            session['paypal_simulation'] = False
+            session['paypal_amount'] = str(total)
+            session['paypal_user_id'] = current_user.id_usuario
+            
             for link in payment.links:
                 if link.rel == "approval_url":
+                    print(f"URL de aprobación: {link.href}")
                     return redirect(link.href)
         else:
-            flash('Error al crear el pago en PayPal', 'error')
+            error_message = f"Error al crear el pago en PayPal: {payment.error}"
+            print(error_message)
+            flash('Error al crear el pago en PayPal. Por favor, intente nuevamente.', 'error')
             return redirect(url_for('checkout'))
             
     except Exception as e:
-        print(f"Error en create_paypal_payment: {str(e)}")
-        flash('Error al procesar el pago', 'error')
+        error_message = f"Error en create_paypal_payment: {str(e)}"
+        print(error_message)
+        print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback completo:\n{traceback.format_exc()}")
+        flash('Error al procesar el pago. Por favor, intente nuevamente.', 'error')
         return redirect(url_for('checkout'))
+
+@app.route('/paypal/simulation')
+@login_required
+def paypal_simulation():
+    try:
+        print("\n=== Página de simulación PayPal ===")
+        print(f"Usuario actual: {current_user.id_usuario}")
+        print(f"Modo simulación activo: {session.get('paypal_simulation')}")
+        print(f"ID de pago: {session.get('paypal_payment_id')}")
+        print(f"Monto: {session.get('paypal_amount')}")
+        
+        if not session.get('paypal_simulation'):
+            print("Error: Modo simulación no activo")
+            return redirect(url_for('checkout'))
+        
+        # Verificar que el usuario actual sea el mismo que inició el pago
+        if session.get('paypal_user_id') != current_user.id_usuario:
+            print(f"Error de autenticación: Usuario actual {current_user.id_usuario} != Usuario del pago {session.get('paypal_user_id')}")
+            flash('Error de autenticación en el pago', 'error')
+            return redirect(url_for('checkout'))
+        
+        return render_template('paypal_simulation.html')
+        
+    except Exception as e:
+        print(f"Error en paypal_simulation: {str(e)}")
+        print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback completo:\n{traceback.format_exc()}")
+        flash('Error al acceder a la simulación. Por favor, intente nuevamente.', 'error')
+        return redirect(url_for('checkout'))
+
+@app.route('/paypal/simulation/execute', methods=['POST'])
+@login_required
+def paypal_simulation_execute():
+    try:
+        print("\n=== Ejecutando simulación PayPal ===")
+        print(f"Usuario actual: {current_user.id_usuario}")
+        print(f"Modo simulación activo: {session.get('paypal_simulation')}")
+        print(f"ID de pago: {session.get('paypal_payment_id')}")
+        print(f"Monto: {session.get('paypal_amount')}")
+        
+        # Verificar que el usuario actual sea el mismo que inició el pago
+        if session.get('paypal_user_id') != current_user.id_usuario:
+            print(f"Error de autenticación en simulación: Usuario actual {current_user.id_usuario} != Usuario del pago {session.get('paypal_user_id')}")
+            flash('Error de autenticación en el pago', 'error')
+            return redirect(url_for('checkout'))
+        
+        # Verificar que el carrito no esté vacío
+        items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
+        if not items:
+            print("Error: Carrito vacío en simulación")
+            flash('El carrito está vacío', 'error')
+            return redirect(url_for('carrito'))
+        
+        # Verificar datos del cliente
+        if not current_user.direccion or not current_user.telefono:
+            print(f"Error: Datos de cliente incompletos en simulación - Dirección: {bool(current_user.direccion)}, Teléfono: {bool(current_user.telefono)}")
+            flash('Debe completar su dirección y teléfono antes de realizar el pedido', 'error')
+            return redirect(url_for('actualizar_perfil'))
+        
+        # Verificar stock
+        for item in items:
+            if item.cantidad > item.producto.stock:
+                print(f"Error: Stock insuficiente en simulación para {item.producto.nombre} - Cantidad: {item.cantidad}, Stock: {item.producto.stock}")
+                flash(f'No hay suficiente stock de {item.producto.nombre}', 'error')
+                return redirect(url_for('carrito'))
+        
+        payment_id = session.get('paypal_payment_id')
+        if not payment_id:
+            print("Error: No se encontró ID de pago en la simulación")
+            flash('No se encontró información del pago', 'error')
+            return redirect(url_for('checkout'))
+        
+        print(f"Iniciando simulación de pago exitoso - ID: {payment_id}")
+        
+        # Calcular total para verificación
+        subtotal = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
+        iva = subtotal * Decimal('0.13')
+        total = (subtotal + iva).quantize(Decimal('0.01'))
+        paypal_amount = Decimal(str(session.get('paypal_amount', 0))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        
+        print(f"[DEBUG] Total calculado: {total}")
+        print(f"[DEBUG] Monto PayPal de sesión: {paypal_amount}")
+        print(f"[DEBUG] Diferencia absoluta: {abs(total - paypal_amount)}")
+
+        if abs(total - paypal_amount) > Decimal('0.01'):  # Comparación directa en bolivianos
+            error_message = f"Error en monto: Total ({total}) != PayPal ({paypal_amount})"
+            print(error_message)
+            flash('Error en el monto del pago. Por favor, intente nuevamente.', 'error')
+            return redirect(url_for('carrito'))
+        
+        # Iniciar transacción
+        try:
+            # Crear pedido
+            pedido = Pedido(
+                id_usuario=current_user.id_usuario,
+                # numero_factura se asignará en el trigger
+                subtotal=subtotal,
+                iva=iva,
+                total=total,
+                direccion_envio=current_user.direccion,
+                telefono=current_user.telefono,
+                estado='pendiente',
+                metodo_pago='paypal',
+                paypal_payment_id=payment_id,
+                fecha_actualizacion=datetime.utcnow()
+            )
+            db.session.add(pedido)
+            db.session.flush()  # Obtener el ID del pedido
+            
+            print(f"Pedido creado - ID: {pedido.id_pedido}") # Eliminar numero_factura de este print
+            
+            # Crear detalles del pedido
+            for item in items:
+                detalle = DetallePedido(
+                    id_pedido=pedido.id_pedido,
+                    id_producto=item.id_producto,
+                    cantidad=item.cantidad,
+                    precio_unitario=item.producto.precio,
+                    subtotal=item.producto.precio * item.cantidad
+                )
+                db.session.add(detalle)
+                
+                # Actualizar stock
+                producto = item.producto
+                producto.stock -= item.cantidad
+                if producto.stock < 0:
+                    raise ValueError(f"Stock insuficiente para {producto.nombre}")
+                db.session.add(producto)
+                
+                print(f"Detalle agregado - Producto: {producto.nombre}, Cantidad: {item.cantidad}")
+            
+            # Limpiar carrito y sesión de PayPal
+            Carrito.query.filter_by(id_usuario=current_user.id_usuario).delete()
+            session.pop('paypal_payment_id', None)
+            session.pop('paypal_simulation', None)
+            session.pop('paypal_user_id', None)
+            session.pop('paypal_amount', None)
+            
+            # Confirmar transacción
+            db.session.commit()
+            
+            print(f"Pedido procesado exitosamente - ID: {pedido.id_pedido}") # Eliminar numero_factura de este print
+            flash('Pedido procesado exitosamente', 'success')
+            return redirect(url_for('ver_pedido', id=pedido.id_pedido))
+            
+        except ValueError as ve:
+            db.session.rollback()
+            print(f"Error de validación: {str(ve)}")
+            flash(str(ve), 'error')
+            return redirect(url_for('carrito'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error en la transacción: {str(e)}")
+            print(f"Tipo de error: {type(e)}")
+            import traceback
+            print(f"Traceback completo:\n{traceback.format_exc()}")
+            flash('Error al procesar el pedido. Por favor, intente nuevamente.', 'error')
+            return redirect(url_for('carrito'))
+            
+    except Exception as e:
+        print(f"Error general en paypal_simulation_execute: {str(e)}")
+        print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback completo:\n{traceback.format_exc()}")
+        flash('Error al procesar la simulación. Por favor, intente nuevamente.', 'error')
+        return redirect(url_for('checkout'))
+
+@app.route('/paypal/simulation/cancel')
+@login_required
+def paypal_simulation_cancel():
+    # Verificar que el usuario actual sea el mismo que inició el pago
+    if session.get('paypal_user_id') != current_user.id_usuario:
+        flash('Error de autenticación en el pago', 'error')
+        return redirect(url_for('checkout'))
+    
+    session.pop('paypal_payment_id', None)
+    session.pop('paypal_simulation', None)
+    session.pop('paypal_user_id', None)
+    flash('Pago cancelado', 'info')
+    return redirect(url_for('checkout'))
 
 @app.route('/paypal/execute')
 @login_required
@@ -1737,23 +2083,45 @@ def paypal_execute():
             flash('No se encontró información del pago', 'error')
             return redirect(url_for('checkout'))
 
+        # Verificar que el usuario actual sea el mismo que inició el pago
+        if session.get('paypal_user_id') != current_user.id_usuario:
+            flash('Error de autenticación en el pago', 'error')
+            return redirect(url_for('checkout'))
+
+        if session.get('paypal_simulation'):
+            # Si es una simulación, procesar directamente
+            return redirect(url_for('procesar_pedido_paypal', payment_id=payment_id))
+
+        # Proceso real de PayPal
+        print(f"Ejecutando pago PayPal. ID: {payment_id}")
         payment = paypalrestsdk.Payment.find(payment_id)
         
         if payment.execute({"payer_id": request.args.get('PayerID')}):
-            # El pago fue exitoso, procesar el pedido
+            print(f"Pago PayPal ejecutado exitosamente. ID: {payment_id}")
             return redirect(url_for('procesar_pedido_paypal', payment_id=payment_id))
         else:
-            flash('Error al ejecutar el pago en PayPal', 'error')
+            error_message = f"Error al ejecutar el pago en PayPal: {payment.error}"
+            print(error_message)
+            flash('Error al ejecutar el pago en PayPal. Por favor, intente nuevamente.', 'error')
             return redirect(url_for('checkout'))
             
     except Exception as e:
-        print(f"Error en paypal_execute: {str(e)}")
-        flash('Error al procesar el pago', 'error')
+        error_message = f"Error en paypal_execute: {str(e)}"
+        print(error_message)
+        flash('Error al procesar el pago. Por favor, intente nuevamente.', 'error')
         return redirect(url_for('checkout'))
 
 @app.route('/paypal/cancel')
 @login_required
 def paypal_cancel():
+    # Verificar que el usuario actual sea el mismo que inició el pago
+    if session.get('paypal_user_id') != current_user.id_usuario:
+        flash('Error de autenticación en el pago', 'error')
+        return redirect(url_for('checkout'))
+    
+    session.pop('paypal_payment_id', None)
+    session.pop('paypal_simulation', None)
+    session.pop('paypal_user_id', None)
     flash('Pago cancelado', 'info')
     return redirect(url_for('checkout'))
 
@@ -1761,73 +2129,128 @@ def paypal_cancel():
 @login_required
 def procesar_pedido_paypal(payment_id):
     try:
+        print("\n=== Procesando pedido PayPal ===")
+        print(f"Usuario actual: {current_user.id_usuario}")
+        print(f"ID de pago: {payment_id}")
+        
+        # Verificar que el usuario actual sea el mismo que inició el pago
+        if session.get('paypal_user_id') != current_user.id_usuario:
+            print(f"Error de autenticación: Usuario actual {current_user.id_usuario} != Usuario del pago {session.get('paypal_user_id')}")
+            flash('Error de autenticación en el pago', 'error')
+            return redirect(url_for('checkout'))
+        
         # Validar que el carrito no esté vacío
         items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
         if not items:
+            print("Error: Carrito vacío")
             flash('El carrito está vacío', 'error')
             return redirect(url_for('carrito'))
         
         # Validar datos del cliente
         if not current_user.direccion or not current_user.telefono:
+            print(f"Error: Datos de cliente incompletos - Dirección: {bool(current_user.direccion)}, Teléfono: {bool(current_user.telefono)}")
             flash('Debe completar su dirección y teléfono antes de realizar el pedido', 'error')
             return redirect(url_for('actualizar_perfil'))
         
         # Validar stock de productos
         for item in items:
             if item.cantidad > item.producto.stock:
+                print(f"Error: Stock insuficiente para {item.producto.nombre} - Cantidad: {item.cantidad}, Stock: {item.producto.stock}")
                 flash(f'No hay suficiente stock de {item.producto.nombre}', 'error')
                 return redirect(url_for('carrito'))
         
         # Generar número de factura único
-        numero_factura = f"F{datetime.now().strftime('%Y%m%d')}{Pedido.query.count() + 1:04d}"
+        # numero_factura se genera en el trigger before_pedido_insert
+        # numero_factura = f"F{datetime.now().strftime('%Y%m%d')}{Pedido.query.count() + 1:04d}"
         
         # Calcular totales e impuestos
-        subtotal = sum(item.producto.precio * item.cantidad for item in items)
+        subtotal = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
         iva = subtotal * Decimal('0.13')  # 13% IVA
-        total = subtotal + iva
+        total = (subtotal + iva).quantize(Decimal('0.01'))
         
-        # Crear pedido
-        pedido = Pedido(
-            id_usuario=current_user.id_usuario,
-            numero_factura=numero_factura,
-            subtotal=subtotal,
-            iva=iva,
-            total=total,
-            direccion_envio=current_user.direccion,
-            telefono=current_user.telefono,
-            estado='pendiente',
-            metodo_pago='paypal',
-            paypal_payment_id=payment_id
-        )
-        db.session.add(pedido)
-        db.session.flush()
+        # Verificar que el total coincida con el monto de PayPal
+        paypal_amount = Decimal(str(session.get('paypal_amount', 0))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        if abs(total - paypal_amount) > Decimal('0.01'):  # Comparación directa en bolivianos
+            error_message = f"Error en monto: Total ({total}) != PayPal ({paypal_amount})"
+            print(error_message)
+            flash('Error en el monto del pago. Por favor, intente nuevamente.', 'error')
+            return redirect(url_for('carrito'))
         
-        # Crear detalles del pedido
-        for item in items:
-            detalle = DetallePedido(
-                id_pedido=pedido.id_pedido,
-                id_producto=item.id_producto,
-                cantidad=item.cantidad,
-                precio_unitario=item.producto.precio,
-                subtotal=item.producto.precio * item.cantidad
+        # Iniciar transacción
+        try:
+            # Crear pedido
+            pedido = Pedido(
+                id_usuario=current_user.id_usuario,
+                # numero_factura se asignará en el trigger
+                subtotal=subtotal,
+                iva=iva,
+                total=total,
+                direccion_envio=current_user.direccion,
+                telefono=current_user.telefono,
+                estado='pendiente',
+                metodo_pago='paypal',
+                paypal_payment_id=payment_id,
+                fecha_actualizacion=datetime.utcnow()
             )
-            db.session.add(detalle)
+            db.session.add(pedido)
+            db.session.flush()  # Obtener el ID del pedido
             
-            # Actualizar stock
-            producto = item.producto
-            producto.stock -= item.cantidad
-        
-        # Limpiar carrito
-        Carrito.query.filter_by(id_usuario=current_user.id_usuario).delete()
-        
-        db.session.commit()
-        flash('Pedido procesado exitosamente', 'success')
-        return redirect(url_for('ver_pedido', id=pedido.id_pedido))
-        
+            print(f"Pedido creado - ID: {pedido.id_pedido}")
+            
+            # Crear detalles del pedido
+            for item in items:
+                detalle = DetallePedido(
+                    id_pedido=pedido.id_pedido,
+                    id_producto=item.id_producto,
+                    cantidad=item.cantidad,
+                    precio_unitario=item.producto.precio,
+                    subtotal=item.producto.precio * item.cantidad
+                )
+                db.session.add(detalle)
+                
+                # Actualizar stock
+                producto = item.producto
+                producto.stock -= item.cantidad
+                if producto.stock < 0:
+                    raise ValueError(f"Stock insuficiente para {producto.nombre}")
+                db.session.add(producto)
+                
+                print(f"Detalle agregado - Producto: {producto.nombre}, Cantidad: {item.cantidad}")
+            
+            # Limpiar carrito y sesión de PayPal
+            Carrito.query.filter_by(id_usuario=current_user.id_usuario).delete()
+            session.pop('paypal_payment_id', None)
+            session.pop('paypal_simulation', None)
+            session.pop('paypal_user_id', None)
+            session.pop('paypal_amount', None)
+            
+            # Confirmar transacción
+            db.session.commit()
+            
+            print(f"Pedido procesado exitosamente - ID: {pedido.id_pedido}")
+            flash('Pedido procesado exitosamente', 'success')
+            return redirect(url_for('ver_pedido', id=pedido.id_pedido))
+            
+        except ValueError as ve:
+            db.session.rollback()
+            print(f"Error de validación: {str(ve)}")
+            flash(str(ve), 'error')
+            return redirect(url_for('carrito'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error en la transacción: {str(e)}")
+            print(f"Tipo de error: {type(e)}")
+            import traceback
+            print(f"Traceback completo:\n{traceback.format_exc()}")
+            flash('Error al procesar el pedido. Por favor, intente nuevamente.', 'error')
+            return redirect(url_for('carrito'))
+            
     except Exception as e:
-        db.session.rollback()
-        flash('Error al procesar el pedido', 'error')
-        print(f"Error: {str(e)}")
+        print(f"Error general en procesar_pedido_paypal: {str(e)}")
+        print(f"Tipo de error: {type(e)}")
+        import traceback
+        print(f"Traceback completo:\n{traceback.format_exc()}")
+        flash('Error al procesar el pedido. Por favor, intente nuevamente.', 'error')
         return redirect(url_for('carrito'))
 
 if __name__ == '__main__':

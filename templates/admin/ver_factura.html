@@ -35,6 +35,8 @@
                         </div>
                         <div class="col-md-6 text-end">
                             <h5>Datos de la Factura</h5>
+                            <p class="mb-1"><strong>N° Factura:</strong> {{ factura.numero_factura }}</p>
+                            <p class="mb-1"><strong>N° Voucher:</strong> {{ factura.voucher_number }}</p>
                             <p class="mb-1"><strong>Fecha de Emisión:</strong> {{ factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</p>
                             <p class="mb-1"><strong>Estado:</strong> 
                                 <span class="badge {% if factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
@@ -53,7 +55,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <p class="mb-1"><strong>Nombre:</strong> {{ factura.pedido.usuario.nombre }}</p>
-                                    <p class="mb-1"><strong>NIT:</strong> {{ factura.pedido.usuario.nit }}</p>
+                                    <p class="mb-1"><strong>NIT:</strong> {{ factura.pedido.usuario.nit or 'No especificado' }}</p>
                                 </div>
                                 <div class="col-md-6">
                                     <p class="mb-1"><strong>Dirección:</strong> {{ factura.pedido.direccion_envio }}</p>
@@ -90,23 +92,23 @@
                                         </div>
                                     </td>
                                     <td class="text-center">{{ detalle.cantidad }}</td>
-                                    <td class="text-end">${{ "%.2f"|format(detalle.precio_unitario) }}</td>
-                                    <td class="text-end">${{ "%.2f"|format(detalle.subtotal) }}</td>
+                                    <td class="text-end">Bs. {{ "%.2f"|format(detalle.precio_unitario) }}</td>
+                                    <td class="text-end">Bs. {{ "%.2f"|format(detalle.subtotal) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                    <td class="text-end">${{ "%.2f"|format(factura.subtotal) }}</td>
+                                    <td class="text-end">Bs. {{ "%.2f"|format(factura.subtotal) }}</td>
                                 </tr>
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>IVA (13%):</strong></td>
-                                    <td class="text-end">${{ "%.2f"|format(factura.iva) }}</td>
+                                    <td class="text-end">Bs. {{ "%.2f"|format(factura.iva) }}</td>
                                 </tr>
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                    <td class="text-end"><strong>${{ "%.2f"|format(factura.total) }}</strong></td>
+                                    <td class="text-end"><strong>Bs. {{ "%.2f"|format(factura.total) }}</strong></td>
                                 </tr>
                             </tfoot>
                         </table>

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Simulación de Pago PayPal - TechStore{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Simulación de Pago PayPal</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fab fa-paypal fa-4x text-primary mb-3"></i>
+                        <p class="lead">Esta es una simulación del proceso de pago con PayPal.</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            En un entorno real, serías redirigido a PayPal para completar el pago.
+                        </div>
+                    </div>
+
+                    <div class="payment-details mb-4">
+                        <h5>Detalles del Pago</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th>ID de Pago:</th>
+                                        <td>{{ session.get('paypal_payment_id', 'No disponible') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Monto Total:</th>
+                                        <td>Bs. {{ "%.2f"|format(session.get('paypal_amount', 0)|float) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Estado:</th>
+                                        <td><span class="badge bg-warning">Pendiente</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('paypal_simulation_execute') }}" method="POST" class="text-center">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Simular Pago Exitoso
+                            </button>
+                            <a href="{{ url_for('paypal_simulation_cancel') }}" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times-circle me-2"></i>Simular Cancelación
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

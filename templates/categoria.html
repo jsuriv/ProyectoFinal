@@ -35,7 +35,7 @@
                         {{ producto.descripcion[:100] }}{% if producto.descripcion|length > 100 %}...{% endif %}
                     </p>
                     <p class="card-text">
-                        <strong class="text-primary">${{ "%.2f"|format(producto.precio) }}</strong>
+                        <strong class="text-primary">Bs. {{ "%.2f"|format(producto.precio) }}</strong>
                     </p>
                     <p class="card-text">
                         <small class="text-muted">

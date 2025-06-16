@@ -60,7 +60,7 @@
                             <td>{{ factura.numero_factura }}</td>
                             <td>{{ factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</td>
                             <td>{{ factura.pedido.usuario.nombre }}</td>
-                            <td>${{ "%.2f"|format(factura.total) }}</td>
+                            <td>Bs. {{ "%.2f"|format(factura.total) }}</td>
                             <td>
                                 <span class="badge {% if factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
                                     {{ factura.estado|title }}
@@ -279,55 +279,41 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Función para cargar los datos de la factura
+    // Función para cargar los detalles de la factura
     function cargarFactura(idFactura) {
         fetch(`/api/facturas/${idFactura}`)
             .then(response => response.json())
             .then(data => {
-                // Actualizar datos básicos
+                // Actualizar información básica
                 document.getElementById('facturaNumero').textContent = data.numero_factura;
                 document.getElementById('facturaFecha').textContent = new Date(data.fecha_emision).toLocaleString();
-                document.getElementById('facturaEstado').innerHTML = `
-                    <span class="badge ${data.estado === 'emitida' ? 'bg-success' : 'bg-danger'}">
-                        ${data.estado.charAt(0).toUpperCase() + data.estado.slice(1)}
-                    </span>
-                `;
-
-                // Actualizar datos del cliente
+                document.getElementById('facturaEstado').textContent = data.estado.charAt(0).toUpperCase() + data.estado.slice(1);
+                
+                // Actualizar información del cliente
                 document.getElementById('clienteNombre').textContent = data.pedido.usuario.nombre;
-                document.getElementById('clienteNit').textContent = data.pedido.usuario.nit;
+                document.getElementById('clienteNit').textContent = data.pedido.usuario.nit || 'No especificado';
                 document.getElementById('clienteDireccion').textContent = data.pedido.direccion_envio;
                 document.getElementById('clienteTelefono').textContent = data.pedido.telefono;
-
+                
                 // Actualizar productos
                 const productosTabla = document.getElementById('productosTabla');
                 productosTabla.innerHTML = '';
                 data.pedido.detalles.forEach(detalle => {
                     productosTabla.innerHTML += `
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    ${detalle.producto.imagen ? 
-                                        `<img src="/images/${detalle.producto.imagen}" 
-                                              alt="${detalle.producto.nombre}" 
-                                              class="img-thumbnail me-2" 
-                                              style="width: 50px; height: 50px; object-fit: cover;">` 
-                                        : ''}
-                                    ${detalle.producto.nombre}
-                                </div>
-                            </td>
+                            <td>${detalle.producto.nombre}</td>
                             <td class="text-center">${detalle.cantidad}</td>
-                            <td class="text-end">$${detalle.precio_unitario.toFixed(2)}</td>
-                            <td class="text-end">$${detalle.subtotal.toFixed(2)}</td>
+                            <td class="text-end">Bs. ${detalle.precio_unitario.toFixed(2)}</td>
+                            <td class="text-end">Bs. ${detalle.subtotal.toFixed(2)}</td>
                         </tr>
                     `;
                 });
-
+                
                 // Actualizar totales
-                document.getElementById('facturaSubtotal').textContent = `$${data.subtotal.toFixed(2)}`;
-                document.getElementById('facturaIva').textContent = `$${data.iva.toFixed(2)}`;
-                document.getElementById('facturaTotal').textContent = `$${data.total.toFixed(2)}`;
-
+                document.getElementById('facturaSubtotal').textContent = `Bs. ${data.subtotal.toFixed(2)}`;
+                document.getElementById('facturaIva').textContent = `Bs. ${data.iva.toFixed(2)}`;
+                document.getElementById('facturaTotal').textContent = `Bs. ${data.total.toFixed(2)}`;
+                
                 // Actualizar historial de estados
                 const historialEstados = document.getElementById('historialEstados');
                 historialEstados.innerHTML = '';
@@ -349,8 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 // Actualizar enlaces
-                document.getElementById('btnDescargarFactura').href = `/admin/facturas/${idFactura}/descargar`;
-                document.getElementById('btnVerPedido').href = `/admin/pedidos/${data.id_pedido}`;
+                document.getElementById('btnDescargarFactura').href = `/factura/descargar/${idFactura}`;
+                document.getElementById('btnVerPedido').href = `/admin/pedido/${data.pedido.id_pedido}`;
             })
             .catch(error => console.error('Error:', error));
     }

@@ -146,6 +146,7 @@ CREATE TABLE `facturas` (
   `id_factura` int(11) NOT NULL,
   `id_pedido` int(11) NOT NULL,
   `numero_factura` varchar(20) NOT NULL,
+  `voucher_number` varchar(20) NOT NULL,
   `fecha_emision` datetime DEFAULT current_timestamp(),
   `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
   `iva` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -158,9 +159,9 @@ CREATE TABLE `facturas` (
 -- Volcado de datos para la tabla `facturas`
 --
 
-INSERT INTO `facturas` (`id_factura`, `id_pedido`, `numero_factura`, `fecha_emision`, `subtotal`, `iva`, `total`, `estado`, `pdf_path`) VALUES
-(1, 1, 'FACT-000001', '2025-06-13 11:20:08', 2999.97, 390.00, 3389.97, 'emitida', 'C:\\xampp\\htdocs\\ProyectoFinal\\static\\facturas\\factura_FACT-000001.pdf'),
-(2, 2, 'FACT-000002', '2025-06-13 11:48:50', 0.00, 0.00, 7999.92, 'emitida', 'C:\\xampp\\htdocs\\ProyectoFinal\\static\\facturas\\factura_FACT-000002.pdf');
+INSERT INTO `facturas` (`id_factura`, `id_pedido`, `numero_factura`, `voucher_number`, `fecha_emision`, `subtotal`, `iva`, `total`, `estado`, `pdf_path`) VALUES
+(1, 1, 'FACT-000001', 'VOU-20250613-000001', '2025-06-13 11:20:08', 2999.97, 390.00, 3389.97, 'emitida', 'C:\\xampp\\htdocs\\ProyectoFinal\\static\\facturas\\factura_FACT-000001.pdf'),
+(2, 2, 'FACT-000002', 'VOU-20250613-000002', '2025-06-13 11:48:50', 0.00, 0.00, 7999.92, 'emitida', 'C:\\xampp\\htdocs\\ProyectoFinal\\static\\facturas\\factura_FACT-000002.pdf');
 
 --
 -- Disparadores `facturas`
@@ -177,32 +178,126 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id_usuario` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `tipo_usuario` enum('admin','usuario') NOT NULL DEFAULT 'usuario',
+  `nit` varchar(20) DEFAULT NULL,
+  `direccion` varchar(255) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo',
+  `fecha_registro` datetime DEFAULT current_timestamp(),
+  `paypal_email` varchar(255) DEFAULT NULL,
+  `paypal_verified` boolean DEFAULT FALSE,
+  `paypal_verification_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (
+    `id_usuario`, 
+    `nombre`, 
+    `email`, 
+    `password`, 
+    `tipo_usuario`, 
+    `nit`, 
+    `direccion`, 
+    `telefono`, 
+    `estado`, 
+    `fecha_registro`, 
+    `paypal_email`, 
+    `paypal_verified`, 
+    `paypal_verification_date`
+) VALUES
+(2, 'Jhonathan', 'jhonn@gmail.com', 'pbkdf2:sha256:600000$rHe1G8eohPxKcHlz$92e7bce188a79194f9936b8f695711d5c19d04e0b0cec1395660a043f8efacbe', 'admin', NULL, 'Aniceto Arce 46', '75781303', 'activo', '2025-06-13 07:30:21', NULL, FALSE, NULL),
+(4, 'juanjo', 'juanjo@gmail.com', 'pbkdf2:sha256:600000$d9D8sNtJojwcVmDP$a1c6d816e773310c9ff47acfe6b2655253ef2171f6f5c876f09d2d31f275e3d4', 'usuario', NULL, 'lomaspampas', '456767678', 'activo', '2025-06-13 07:38:29', NULL, FALSE, NULL),
+(5, 'pepe', 'pepe@gmail.com', 'pbkdf2:sha256:600000$6Tmw4NTkx01cfwWU$1360e0505b9e4feb2d5aa5f2c54e022026171fc7a9c59dbf57a5bc46f8b71c6f', 'usuario', '12345678912', 'feliz morales #66', '74440011', 'activo', '2025-06-13 16:01:23', NULL, FALSE, NULL);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `pedidos`
 --
 
 CREATE TABLE `pedidos` (
-  `id_pedido` int(11) NOT NULL,
+  `id_pedido` int(11) NOT NULL AUTO_INCREMENT,
   `id_usuario` int(11) NOT NULL,
   `numero_factura` varchar(20) NOT NULL,
-  `fecha_pedido` datetime DEFAULT current_timestamp(),
-  `fecha_actualizacion` datetime DEFAULT NULL ON UPDATE current_timestamp(),
-  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `iva` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `estado` enum('pendiente','en_proceso','enviado','entregado','cancelado') DEFAULT 'pendiente',
-  `direccion_envio` varchar(200) NOT NULL,
+  `fecha_pedido` datetime NOT NULL,
+  `fecha_actualizacion` datetime NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `iva` decimal(10,2) NOT NULL,
+  `total` decimal(10,2) NOT NULL,
+  `estado` enum('pendiente','en_proceso','enviado','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
+  `direccion_envio` varchar(255) NOT NULL,
   `telefono` varchar(20) NOT NULL,
   `metodo_pago` varchar(50) DEFAULT 'efectivo',
-  `paypal_payment_id` varchar(255) DEFAULT NULL
+  `paypal_payment_id` varchar(255) DEFAULT NULL,
+  `paypal_payer_id` varchar(255) DEFAULT NULL,
+  `paypal_payment_status` varchar(50) DEFAULT NULL,
+  `paypal_payment_date` datetime DEFAULT NULL,
+  `paypal_transaction_id` varchar(255) DEFAULT NULL,
+  `paypal_payment_method` varchar(50) DEFAULT 'paypal',
+  `paypal_payment_currency` varchar(10) DEFAULT 'USD',
+  `paypal_payment_amount` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_fee` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_tax` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_shipping` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_subtotal` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_total` decimal(10,2) DEFAULT NULL,
+  `paypal_payment_created_at` datetime DEFAULT NULL,
+  `paypal_payment_updated_at` datetime DEFAULT NULL,
+  `paypal_payment_error` text DEFAULT NULL,
+  PRIMARY KEY (`id_pedido`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `pedidos`
 --
 
-INSERT INTO `pedidos` (`id_pedido`, `id_usuario`, `numero_factura`, `fecha_pedido`, `fecha_actualizacion`, `subtotal`, `iva`, `total`, `estado`, `direccion_envio`, `telefono`, `metodo_pago`, `paypal_payment_id`) VALUES
-(1, 4, 'FACT-000001', '2025-06-13 15:20:08', '2025-06-13 16:03:01', 0.00, 0.00, 2999.97, 'enviado', 'lomaspampas', '456767678', 'paypal', NULL),
-(2, 2, 'FACT-000002', '2025-06-13 15:48:50', '2025-06-13 16:02:55', 0.00, 0.00, 7999.92, 'en_proceso', 'Aniceto Arce 46', '75781303', 'paypal', NULL);
+INSERT INTO `pedidos` (
+    `id_pedido`, 
+    `id_usuario`, 
+    `numero_factura`, 
+    `fecha_pedido`, 
+    `fecha_actualizacion`, 
+    `subtotal`, 
+    `iva`, 
+    `total`, 
+    `estado`, 
+    `direccion_envio`, 
+    `telefono`, 
+    `metodo_pago`, 
+    `paypal_payment_id`, 
+    `paypal_payer_id`, 
+    `paypal_payment_status`, 
+    `paypal_payment_date`, 
+    `paypal_transaction_id`, 
+    `paypal_payment_method`, 
+    `paypal_payment_currency`, 
+    `paypal_payment_amount`, 
+    `paypal_payment_fee`, 
+    `paypal_payment_tax`, 
+    `paypal_payment_shipping`, 
+    `paypal_payment_subtotal`, 
+    `paypal_payment_total`, 
+    `paypal_payment_created_at`, 
+    `paypal_payment_updated_at`, 
+    `paypal_payment_error`
+) VALUES
+(1, 4, 'FACT-000001', '2025-06-13 15:20:08', '2025-06-13 16:03:01', 2654.84, 345.13, 2999.97, 'enviado', 'lomaspampas', '456767678', 'paypal', NULL, NULL, NULL, NULL, NULL, 'paypal', 'USD', 2999.97, NULL, 345.13, NULL, 2654.84, 2999.97, '2025-06-13 15:20:08', '2025-06-13 16:03:01', NULL),
+(2, 2, 'FACT-000002', '2025-06-13 15:48:50', '2025-06-13 16:02:55', 7079.58, 920.34, 7999.92, 'en_proceso', 'Aniceto Arce 46', '75781303', 'paypal', NULL, NULL, NULL, NULL, NULL, 'paypal', 'USD', 7999.92, NULL, 920.34, NULL, 7079.58, 7999.92, '2025-06-13 15:48:50', '2025-06-13 16:02:55', NULL);
 
 --
 -- Disparadores `pedidos`
@@ -300,34 +395,6 @@ INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `stoc
 (20, 'Apple Magic Keyboard', 'Teclado inalámbrico con diseño minimalista y gran duración de batería.', 149.99, 60, 4, 'magickeyboard.jpg', 'activo', '2025-06-13 15:19:48', NULL),
 (21, 'samsumgs25ultra', 'samsumgs25ulta', 999, 2000, 1, 'samsumgs25ultra.jpg', 'activo', '2025-06-13 15:31:10', '2025-06-13 15:44:00');
 
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `usuarios`
---
-
-CREATE TABLE `usuarios` (
-  `id_usuario` int(11) NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `tipo_usuario` enum('admin','vendedor','usuario') NOT NULL DEFAULT 'usuario',
-  `nit` varchar(11) DEFAULT NULL,
-  `direccion` text DEFAULT NULL,
-  `telefono` varchar(20) DEFAULT NULL,
-  `estado` enum('activo','inactivo') NOT NULL DEFAULT 'activo',
-  `fecha_registro` datetime DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `usuarios`
---
-
-INSERT INTO `usuarios` (`id_usuario`, `nombre`, `email`, `password`, `tipo_usuario`, `nit`, `direccion`, `telefono`, `estado`, `fecha_registro`) VALUES
-(2, 'Jhonathan', 'jhonn@gmail.com', 'pbkdf2:sha256:600000$rHe1G8eohPxKcHlz$92e7bce188a79194f9936b8f695711d5c19d04e0b0cec1395660a043f8efacbe', 'admin', NULL, 'Aniceto Arce 46', '75781303', 'activo', '2025-06-13 07:30:21'),
-(4, 'juanjo', 'juanjo@gmail.com', 'pbkdf2:sha256:600000$d9D8sNtJojwcVmDP$a1c6d816e773310c9ff47acfe6b2655253ef2171f6f5c876f09d2d31f275e3d4', 'usuario', NULL, 'lomaspampas', '456767678', 'activo', '2025-06-13 07:38:29'),
-(5, 'pepe', 'pepe@gmail.com', 'pbkdf2:sha256:600000$6Tmw4NTkx01cfwWU$1360e0505b9e4feb2d5aa5f2c54e022026171fc7a9c59dbf57a5bc46f8b71c6f', 'usuario', '12345678912', 'feliz morales #66', '74440011', 'activo', '2025-06-13 16:01:23');
-
 --
 -- Índices para tablas volcadas
 --
@@ -382,9 +449,6 @@ ALTER TABLE `facturas`
 --
 -- Indices de la tabla `pedidos`
 --
-ALTER TABLE `pedidos`
-  ADD PRIMARY KEY (`id_pedido`),
-  ADD KEY `idx_usuario` (`id_usuario`);
 
 --
 -- Indices de la tabla `productos`
@@ -392,14 +456,6 @@ ALTER TABLE `pedidos`
 ALTER TABLE `productos`
   ADD PRIMARY KEY (`id_producto`),
   ADD KEY `idx_categoria` (`id_categoria`);
-
---
--- Indices de la tabla `usuarios`
---
-ALTER TABLE `usuarios`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD UNIQUE KEY `nit` (`nit`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -480,37 +536,3 @@ ALTER TABLE `carrito`
 --
 -- Filtros para la tabla `detalles_pedido`
 --
-ALTER TABLE `detalles_pedido`
-  ADD CONSTRAINT `fk_detalle_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_detalle_producto` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `estados_factura`
---
-ALTER TABLE `estados_factura`
-  ADD CONSTRAINT `fk_estado_admin` FOREIGN KEY (`id_admin`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL,
-  ADD CONSTRAINT `fk_estado_factura` FOREIGN KEY (`id_factura`) REFERENCES `facturas` (`id_factura`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `facturas`
---
-ALTER TABLE `facturas`
-  ADD CONSTRAINT `fk_factura_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `pedidos`
---
-ALTER TABLE `pedidos`
-  ADD CONSTRAINT `fk_pedido_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE,
-  ADD CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE;
-
---
--- Filtros para la tabla `productos`
---
-ALTER TABLE `productos`
-  ADD CONSTRAINT `fk_producto_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`) ON DELETE SET NULL;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

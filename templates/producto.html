@@ -18,7 +18,7 @@
         <div class="col-md-6">
             <h1 class="mb-3">{{ producto.nombre }}</h1>
             <p class="text-muted">Categoría: {{ producto.categoria.nombre }}</p>
-            <h2 class="text-primary mb-4">${{ "%.2f"|format(producto.precio) }}</h2>
+            <h2 class="text-primary mb-4">Bs. {{ "%.2f"|format(producto.precio) }}</h2>
             <p class="mb-4">{{ producto.descripcion }}</p>
             
             <div class="mb-4">

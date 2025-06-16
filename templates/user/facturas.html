@@ -53,7 +53,7 @@
                         <tr>
                             <td>{{ factura.numero_factura }}</td>
                             <td>{{ factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</td>
-                            <td>${{ "%.2f"|format(factura.total) }}</td>
+                            <td>Bs. {{ "%.2f"|format(factura.total) }}</td>
                             <td>
                                 <span class="badge {% if factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
                                     {{ factura.estado|title }}
@@ -273,16 +273,16 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </td>
                             <td class="text-center">${detalle.cantidad}</td>
-                            <td class="text-end">$${detalle.precio_unitario.toFixed(2)}</td>
-                            <td class="text-end">$${detalle.subtotal.toFixed(2)}</td>
+                            <td class="text-end">Bs. ${detalle.precio_unitario.toFixed(2)}</td>
+                            <td class="text-end">Bs. ${detalle.subtotal.toFixed(2)}</td>
                         </tr>
                     `;
                 });
 
                 // Actualizar totales
-                document.getElementById('facturaSubtotal').textContent = `$${data.subtotal.toFixed(2)}`;
-                document.getElementById('facturaIva').textContent = `$${data.iva.toFixed(2)}`;
-                document.getElementById('facturaTotal').textContent = `$${data.total.toFixed(2)}`;
+                document.getElementById('facturaSubtotal').textContent = `Bs. ${data.subtotal.toFixed(2)}`;
+                document.getElementById('facturaIva').textContent = `Bs. ${data.iva.toFixed(2)}`;
+                document.getElementById('facturaTotal').textContent = `Bs. ${data.total.toFixed(2)}`;
 
                 // Actualizar historial de estados
                 const historialEstados = document.getElementById('historialEstados');
