@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio - Sistema de Ventas de Electrónicos{% endblock %}
+{% block title %}Inicio - ElectroWorld{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -22,10 +22,10 @@
                 {% for categoria in categorias %}
                 <div class="col-md-3 mb-3">
                     <a href="{{ url_for('categoria', id=categoria.id_categoria) }}" class="text-decoration-none">
-                        <div class="card h-100">
+                        <div class="card h-100 category-card">
                             <div class="card-body text-center">
                                 <h5 class="card-title">{{ categoria.nombre }}</h5>
-                                <p class="card-text text-muted">{{ categoria.descripcion }}</p>
+                                <p class="card-text">{{ categoria.descripcion }}</p>
                             </div>
                         </div>
                     </a>
@@ -42,7 +42,7 @@
             <div class="row">
                 {% for producto in productos %}
                 <div class="col-md-3 mb-4">
-                    <div class="card h-100">
+                    <div class="card h-100 product-card">
                         {% if producto.imagen %}
                         <img src="{{ url_for('serve_image', filename=producto.imagen) }}" 
                              class="card-img-top" 
@@ -71,6 +71,56 @@
                     </div>
                 </div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Servicios de Mantenimiento -->
+    <div class="maintenance-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h2 class="important-text">Servicios de Mantenimiento y Reparación</h2>
+                    <p class="lead">Expertos en el cuidado y reparación de tus dispositivos electrónicos</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card service-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="service-icon">
+                                <i class="bi bi-laptop"></i>
+                            </div>
+                            <h5 class="card-title">Mantenimiento de Laptops</h5>
+                            <p class="card-text">Limpieza interna, cambio de pasta térmica, optimización del sistema y diagnóstico completo.</p>
+                            <a href="{{ url_for('servicios_mantenimiento') }}" class="btn btn-light">Más Información</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card service-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="service-icon">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <h5 class="card-title">Reparación de Smartphones</h5>
+                            <p class="card-text">Cambio de pantalla, batería, reparación de software y recuperación de datos.</p>
+                            <a href="{{ url_for('servicios_mantenimiento') }}" class="btn btn-light">Más Información</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card service-card h-100 text-center">
+                        <div class="card-body">
+                            <div class="service-icon">
+                                <i class="bi bi-tools"></i>
+                            </div>
+                            <h5 class="card-title">Reparación de PC</h5>
+                            <p class="card-text">Ensamblaje, actualización de componentes, instalación de software y diagnóstico.</p>
+                            <a href="{{ url_for('servicios_mantenimiento') }}" class="btn btn-light">Más Información</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

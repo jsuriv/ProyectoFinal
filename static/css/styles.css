@@ -1,0 +1,502 @@
+/* ElectroWorld - Estilos Elegantes y Agradables */
+
+:root {
+    --primary-teal: #20B2AA;
+    --secondary-teal: #48D1CC;
+    --dark-teal: #008B8B;
+    --light-teal: #E0FFFF;
+    --accent-teal: #00CED1;
+    --success-teal: #2E8B57;
+    --info-teal: #40E0D0;
+    --warning-teal: #FFD700;
+    --danger-teal: #DC143C;
+    --text-dark: #1a1a1a;
+    --text-light: #ffffff;
+    --background-light: #f8fffe;
+    --background-dark: #001a1a;
+    --card-bg: #ffffff;
+    --border-color: #B0E0E6;
+}
+
+/* Estilos generales elegantes */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    font-weight: 500;
+    background: linear-gradient(135deg, var(--background-light), #e6f3ff);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Tipografía elegante y legible */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--dark-teal);
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 2rem;
+    color: var(--primary-teal);
+}
+
+h3 {
+    font-size: 1.5rem;
+    color: var(--secondary-teal);
+}
+
+p, span, div {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
+.lead {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-teal);
+}
+
+/* Navbar elegante */
+.navbar-dark.bg-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal)) !important;
+    box-shadow: 0 2px 10px rgba(32, 178, 170, 0.3);
+    border-bottom: 3px solid var(--accent-teal);
+}
+
+.navbar-dark.bg-primary .navbar-nav .nav-link {
+    color: var(--text-light) !important;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    margin: 0 0.25rem;
+}
+
+.navbar-dark.bg-primary .navbar-nav .nav-link:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-light) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-light) !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-brand i {
+    color: var(--accent-teal);
+    margin-right: 0.5rem;
+}
+
+/* Botones elegantes */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal)) !important;
+    border: 2px solid var(--accent-teal) !important;
+    color: var(--text-light) !important;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(32, 178, 170, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal)) !important;
+    border-color: var(--secondary-teal) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(32, 178, 170, 0.4);
+}
+
+.btn-outline-primary {
+    color: var(--primary-teal) !important;
+    border: 2px solid var(--primary-teal) !important;
+    font-weight: 600;
+    background-color: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal)) !important;
+    border-color: var(--accent-teal) !important;
+    color: var(--text-light) !important;
+    transform: translateY(-2px);
+}
+
+.btn-light {
+    background: linear-gradient(135deg, var(--text-light), var(--light-teal));
+    border: 2px solid var(--border-color);
+    color: var(--text-dark);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+    background: linear-gradient(135deg, var(--light-teal), var(--accent-teal));
+    border-color: var(--primary-teal);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 178, 170, 0.3);
+}
+
+/* Enlaces elegantes */
+a {
+    color: var(--primary-teal);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--dark-teal);
+    text-decoration: underline;
+}
+
+/* Cards elegantes */
+.product-card {
+    transition: all 0.3s ease;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(32, 178, 170, 0.2);
+    border-color: var(--primary-teal);
+}
+
+.card-title {
+    color: var(--dark-teal);
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-text {
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Categorías elegantes */
+.category-card {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    border: 2px solid var(--accent-teal);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.2);
+}
+
+.category-card:hover {
+    transform: scale(1.03);
+    color: var(--text-light);
+    text-decoration: none;
+    box-shadow: 0 8px 25px rgba(32, 178, 170, 0.3);
+}
+
+.category-card .card-title {
+    color: var(--text-light);
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.category-card .card-text {
+    color: var(--text-light);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* Servicios de mantenimiento elegantes */
+.service-card {
+    background: linear-gradient(135deg, var(--success-teal), var(--info-teal));
+    color: var(--text-light);
+    border: 2px solid var(--accent-teal);
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.2);
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(32, 178, 170, 0.3);
+    border-color: var(--primary-teal);
+}
+
+.service-card .card-title {
+    color: var(--text-light);
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.service-card .card-text {
+    color: var(--text-light);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* Footer elegante */
+footer {
+    background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal)) !important;
+    box-shadow: 0 -2px 10px rgba(32, 178, 170, 0.3);
+    border-top: 3px solid var(--accent-teal);
+}
+
+footer h5 {
+    color: var(--text-light);
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+footer p, footer li {
+    color: var(--text-light);
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+footer a {
+    color: var(--text-light);
+    font-weight: 500;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--accent-teal);
+    opacity: 1;
+    text-decoration: none;
+}
+
+/* Badges y elementos de estado elegantes */
+.badge.bg-danger {
+    background: linear-gradient(135deg, var(--danger-teal), #b91c1c) !important;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+.badge.bg-success {
+    background: linear-gradient(135deg, var(--success-teal), var(--primary-teal)) !important;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* Precios elegantes */
+.price-badge {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal));
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    border: 2px solid var(--accent-teal);
+    box-shadow: 0 3px 10px rgba(32, 178, 170, 0.3);
+    display: inline-block;
+}
+
+/* Formularios elegantes */
+.form-control {
+    border: 2px solid var(--border-color);
+    font-weight: 500;
+    font-size: 1rem;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    background-color: var(--card-bg);
+}
+
+.form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
+    transform: scale(1.01);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--dark-teal);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Alertas elegantes */
+.alert-success {
+    background: linear-gradient(135deg, var(--light-teal), var(--accent-teal));
+    border: 2px solid var(--success-teal);
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, var(--warning-teal), #fbbf24);
+    border: 2px solid #d97706;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, var(--danger-teal), #dc2626);
+    border: 2px solid #b91c1c;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+}
+
+/* Servicios de mantenimiento específicos */
+.maintenance-section {
+    background: linear-gradient(135deg, var(--background-light), var(--light-teal));
+    padding: 3rem 0;
+    margin: 2rem 0;
+    border: 2px solid var(--primary-teal);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(32, 178, 170, 0.1);
+}
+
+.service-icon {
+    font-size: 3.5rem;
+    color: var(--accent-teal);
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 15px rgba(0, 206, 209, 0.4);
+}
+
+/* Listas elegantes */
+.list-unstyled li {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    padding: 0.25rem 0;
+}
+
+.list-unstyled li i {
+    color: var(--primary-teal);
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+}
+
+/* Texto importante */
+.important-text {
+    color: var(--primary-teal);
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown elegante */
+.dropdown-menu {
+    background: linear-gradient(135deg, var(--card-bg), var(--light-teal));
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.2);
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    transform: translateX(5px);
+}
+
+/* Responsive elegante */
+@media (max-width: 768px) {
+    .service-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .price-badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Efectos sutiles */
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    border-bottom: 2px solid var(--accent-teal);
+    font-weight: 600;
+}
+
+/* Botones de acción */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Navegación mejorada */
+.navbar-nav .nav-link {
+    position: relative;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--accent-teal);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 80%;
+}

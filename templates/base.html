@@ -3,21 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema de Ventas de Electrónicos{% endblock %}</title>
+    <title>{% block title %}ElectroWorld - Tu Tienda de Electrónicos y Servicios{% endblock %}</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
         .navbar-brand img {
             height: 40px;
-        }
-        .product-card {
-            transition: transform 0.2s;
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
         }
         .product-image {
             height: 200px;
@@ -37,7 +32,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="bi bi-laptop"></i> TechStore
+                <i class="bi bi-laptop"></i> ElectroWorld
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -60,6 +55,11 @@
                             </li>
                             {% endfor %}
                         </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('servicios_mantenimiento') }}">
+                            <i class="bi bi-tools"></i> Servicios de Mantenimiento
+                        </a>
                     </li>
                 </ul>
                 
@@ -170,8 +170,8 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5>TechStore</h5>
-                    <p>Tu tienda de confianza para productos electrónicos.</p>
+                    <h5>ElectroWorld</h5>
+                    <p>Tu tienda de confianza para productos electrónicos y servicios de mantenimiento.</p>
                 </div>
                 <div class="col-md-4">
                     <h5>Enlaces Rápidos</h5>
@@ -186,13 +186,13 @@
                     <ul class="list-unstyled">
                         <li><i class="bi bi-geo-alt"></i> Dirección: Calle Apruebenos Ingeniero #100</li>
                         <li><i class="bi bi-telephone"></i> Teléfono: +591 75781303</li>
-                        <li><i class="bi bi-envelope"></i> Email: techstore@gmail.com</li>
+                        <li><i class="bi bi-envelope"></i> Email: electro.world@gmail.com</li>
                     </ul>
                 </div>
             </div>
             <hr>
             <div class="text-center">
-                <p class="mb-0">&copy; 2024 TechStore. Todos los derechos reservados.</p>
+                <p class="mb-0">&copy; 2024 ElectroWorld. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

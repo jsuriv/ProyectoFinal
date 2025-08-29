@@ -88,7 +88,8 @@ INSERT INTO `categorias` (`id_categoria`, `nombre`, `descripcion`, `estado`, `fe
 (1, 'Smartphones', 'Teléfonos móviles de última generación', 'activo', '2025-06-13 15:19:48'),
 (2, 'Laptops', 'Computadoras portátiles para trabajo y gaming', 'activo', '2025-06-13 15:19:48'),
 (3, 'Tablets', 'Dispositivos táctiles para productividad y entretenimiento', 'activo', '2025-06-13 15:19:48'),
-(4, 'Accesorios', 'Complementos y accesorios para dispositivos electrónicos', 'activo', '2025-06-13 15:19:48');
+(4, 'Accesorios', 'Complementos y accesorios para dispositivos electrónicos', 'activo', '2025-06-13 15:19:48'),
+(5, 'Servicios de Mantenimiento', 'Servicios profesionales de mantenimiento, reparación y soporte técnico para dispositivos electrónicos', 'activo', '2025-06-13 15:19:48');
 
 -- --------------------------------------------------------
 
@@ -393,7 +394,15 @@ INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `stoc
 (18, 'Logitech MX Master 3S', 'Ratón premium para productividad con scroll electromagnético.', 99.99, 75, 4, 'mxmaster3s.jpg', 'activo', '2025-06-13 15:19:48', NULL),
 (19, 'Samsung 49\" Odyssey G9', 'Monitor gaming curvo con resolución 5120x1440 y 240Hz.', 999.99, 20, 4, 'odysseyg9.jpg', 'activo', '2025-06-13 15:19:48', NULL),
 (20, 'Apple Magic Keyboard', 'Teclado inalámbrico con diseño minimalista y gran duración de batería.', 149.99, 60, 4, 'magickeyboard.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(21, 'samsumgs25ultra', 'samsumgs25ulta', 999, 2000, 1, 'samsumgs25ultra.jpg', 'activo', '2025-06-13 15:31:10', '2025-06-13 15:44:00');
+(21, 'samsumgs25ultra', 'samsumgs25ulta', 999, 2000, 1, 'samsumgs25ultra.jpg', 'activo', '2025-06-13 15:31:10', '2025-06-13 15:44:00'),
+(22, 'Mantenimiento de Laptop', 'Servicio completo de mantenimiento preventivo y correctivo para laptops. Incluye limpieza interna, cambio de pasta térmica, optimización del sistema y diagnóstico completo.', 150.00, 999, 5, 'mantenimiento_laptop.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(23, 'Reparación de Smartphone', 'Reparación profesional de smartphones y tablets. Incluye cambio de pantalla, batería, reparación de software y recuperación de datos.', 200.00, 999, 5, 'reparacion_smartphone.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(24, 'Reparación de PC', 'Ensamblaje, actualización y reparación de computadoras de escritorio. Incluye instalación de software y diagnóstico de problemas.', 100.00, 999, 5, 'reparacion_pc.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(25, 'Seguridad Informática', 'Protección completa de dispositivos contra malware y amenazas. Incluye instalación de antivirus, limpieza de malware y configuración de firewall.', 80.00, 999, 5, 'seguridad_informatica.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(26, 'Configuración de Redes', 'Configuración y reparación de redes WiFi y conexiones de internet. Incluye optimización de red e instalación de routers.', 120.00, 999, 5, 'configuracion_redes.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(27, 'Recuperación de Datos', 'Servicio especializado en recuperación de datos perdidos o eliminados de dispositivos electrónicos.', 250.00, 999, 5, 'recuperacion_datos.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(28, 'Instalación de Software', 'Instalación y configuración de software especializado, sistemas operativos y aplicaciones de productividad.', 60.00, 999, 5, 'instalacion_software.jpg', 'activo', '2025-06-13 15:19:48', NULL),
+(29, 'Actualización de Hardware', 'Actualización de componentes de computadora para mejorar el rendimiento y funcionalidad.', 180.00, 999, 5, 'reparacion_hardware.jpg', 'activo', '2025-06-13 15:19:48', NULL);
 
 --
 -- Índices para tablas volcadas
@@ -477,7 +486,7 @@ ALTER TABLE `carrito`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_pedido`
@@ -507,7 +516,7 @@ ALTER TABLE `pedidos`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`

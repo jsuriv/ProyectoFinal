@@ -247,6 +247,75 @@ def producto(id):
     producto = Producto.query.get_or_404(id)
     return render_template('producto.html', producto=producto)
 
+@app.route('/servicios_mantenimiento')
+def servicios_mantenimiento():
+    return render_template('servicios_mantenimiento.html')
+
+@app.route('/agregar_servicio_carrito', methods=['POST'])
+@login_required
+def agregar_servicio_carrito():
+    try:
+        id_servicio = int(request.form.get('id_servicio'))
+        nombre_servicio = request.form.get('nombre_servicio')
+        precio_servicio = float(request.form.get('precio_servicio'))
+        tipo = request.form.get('tipo')
+        
+        # Crear un producto temporal para el servicio
+        servicio_producto = {
+            'id_producto': f'servicio_{id_servicio}',
+            'nombre': nombre_servicio,
+            'precio': precio_servicio,
+            'tipo': tipo,
+            'descripcion': f'Servicio de mantenimiento: {nombre_servicio}',
+            'imagen': None
+        }
+        
+        # Agregar al carrito (usando la funcionalidad existente)
+        item_carrito = Carrito(
+            id_usuario=current_user.id_usuario,
+            id_producto=id_servicio,  # Usar el ID del servicio
+            cantidad=1
+        )
+        
+        # Guardar información adicional del servicio en la sesión
+        if 'servicios_carrito' not in session:
+            session['servicios_carrito'] = {}
+        
+        session['servicios_carrito'][str(id_servicio)] = {
+            'nombre': nombre_servicio,
+            'precio': precio_servicio,
+            'tipo': tipo
+        }
+        
+        db.session.add(item_carrito)
+        db.session.commit()
+        
+        flash(f'Servicio "{nombre_servicio}" agregado al carrito exitosamente', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al agregar el servicio al carrito', 'error')
+        print(f"Error: {str(e)}")
+    
+    return redirect(url_for('servicios_mantenimiento'))
+
+@app.route('/eliminar_servicio_carrito/<id_servicio>')
+@login_required
+def eliminar_servicio_carrito(id_servicio):
+    try:
+        # Eliminar servicio de la sesión
+        if 'servicios_carrito' in session and id_servicio in session['servicios_carrito']:
+            servicio_nombre = session['servicios_carrito'][id_servicio]['nombre']
+            del session['servicios_carrito'][id_servicio]
+            session.modified = True
+            flash(f'Servicio "{servicio_nombre}" eliminado del carrito', 'success')
+        else:
+            flash('Servicio no encontrado en el carrito', 'error')
+    except Exception as e:
+        flash('Error al eliminar el servicio del carrito', 'error')
+        print(f"Error: {str(e)}")
+    
+    return redirect(url_for('carrito'))
+
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
@@ -308,8 +377,25 @@ def agregar_al_carrito():
 def carrito():
     try:
         items_carrito = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-        total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_carrito)
-        return render_template('carrito.html', items=items_carrito, total=total)
+        
+        # Obtener servicios del carrito desde la sesión
+        servicios_carrito = session.get('servicios_carrito', {})
+        
+        # Calcular total de productos
+        total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_carrito)
+        
+        # Calcular total de servicios
+        total_servicios = sum(Decimal(str(servicio['precio'])) for servicio in servicios_carrito.values())
+        
+        # Total general
+        total = total_productos + total_servicios
+        
+        return render_template('carrito.html', 
+                             items=items_carrito, 
+                             servicios=servicios_carrito,
+                             total=total,
+                             total_productos=total_productos,
+                             total_servicios=total_servicios)
     except Exception as e:
         print(f"Error en carrito: {str(e)}")  # Para debugging
         flash('Error al cargar el carrito', 'error')
@@ -381,11 +467,19 @@ def checkout():
         metodo_pago = request.form.get('metodo_pago')
         
         items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-        if not items:
+        servicios_carrito = session.get('servicios_carrito', {})
+        
+        if not items and not servicios_carrito:
             flash('El carrito está vacío')
             return redirect(url_for('carrito'))
         
-        total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
+        # Calcular total de productos
+        total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items) if items else Decimal('0')
+        
+        # Calcular total de servicios
+        total_servicios = sum(Decimal(str(servicio['precio'])) for servicio in servicios_carrito.values()) if servicios_carrito else Decimal('0')
+        
+        total = total_productos + total_servicios
         
         pedido = Pedido(
             id_usuario=current_user.id_usuario,
