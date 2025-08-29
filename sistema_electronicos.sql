@@ -394,15 +394,7 @@ INSERT INTO `productos` (`id_producto`, `nombre`, `descripcion`, `precio`, `stoc
 (18, 'Logitech MX Master 3S', 'Ratón premium para productividad con scroll electromagnético.', 99.99, 75, 4, 'mxmaster3s.jpg', 'activo', '2025-06-13 15:19:48', NULL),
 (19, 'Samsung 49\" Odyssey G9', 'Monitor gaming curvo con resolución 5120x1440 y 240Hz.', 999.99, 20, 4, 'odysseyg9.jpg', 'activo', '2025-06-13 15:19:48', NULL),
 (20, 'Apple Magic Keyboard', 'Teclado inalámbrico con diseño minimalista y gran duración de batería.', 149.99, 60, 4, 'magickeyboard.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(21, 'samsumgs25ultra', 'samsumgs25ulta', 999, 2000, 1, 'samsumgs25ultra.jpg', 'activo', '2025-06-13 15:31:10', '2025-06-13 15:44:00'),
-(22, 'Mantenimiento de Laptop', 'Servicio completo de mantenimiento preventivo y correctivo para laptops. Incluye limpieza interna, cambio de pasta térmica, optimización del sistema y diagnóstico completo.', 150.00, 999, 5, 'mantenimiento_laptop.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(23, 'Reparación de Smartphone', 'Reparación profesional de smartphones y tablets. Incluye cambio de pantalla, batería, reparación de software y recuperación de datos.', 200.00, 999, 5, 'reparacion_smartphone.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(24, 'Reparación de PC', 'Ensamblaje, actualización y reparación de computadoras de escritorio. Incluye instalación de software y diagnóstico de problemas.', 100.00, 999, 5, 'reparacion_pc.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(25, 'Seguridad Informática', 'Protección completa de dispositivos contra malware y amenazas. Incluye instalación de antivirus, limpieza de malware y configuración de firewall.', 80.00, 999, 5, 'seguridad_informatica.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(26, 'Configuración de Redes', 'Configuración y reparación de redes WiFi y conexiones de internet. Incluye optimización de red e instalación de routers.', 120.00, 999, 5, 'configuracion_redes.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(27, 'Recuperación de Datos', 'Servicio especializado en recuperación de datos perdidos o eliminados de dispositivos electrónicos.', 250.00, 999, 5, 'recuperacion_datos.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(28, 'Instalación de Software', 'Instalación y configuración de software especializado, sistemas operativos y aplicaciones de productividad.', 60.00, 999, 5, 'instalacion_software.jpg', 'activo', '2025-06-13 15:19:48', NULL),
-(29, 'Actualización de Hardware', 'Actualización de componentes de computadora para mejorar el rendimiento y funcionalidad.', 180.00, 999, 5, 'reparacion_hardware.jpg', 'activo', '2025-06-13 15:19:48', NULL);
+(21, 'samsumgs25ultra', 'samsumgs25ulta', 999, 2000, 1, 'samsumgs25ultra.jpg', 'activo', '2025-06-13 15:31:10', '2025-06-13 15:44:00');
 
 --
 -- Índices para tablas volcadas
@@ -516,7 +508,7 @@ ALTER TABLE `pedidos`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
@@ -545,3 +537,137 @@ ALTER TABLE `carrito`
 --
 -- Filtros para la tabla `detalles_pedido`
 --
+ALTER TABLE `detalles_pedido`
+  ADD CONSTRAINT `fk_detalle_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_detalle_producto` FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `estados_factura`
+--
+ALTER TABLE `estados_factura`
+  ADD CONSTRAINT `fk_estado_admin` FOREIGN KEY (`id_admin`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_estado_factura` FOREIGN KEY (`id_factura`) REFERENCES `facturas` (`id_factura`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  ADD CONSTRAINT `fk_factura_pedido` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `pedidos`
+--
+ALTER TABLE `pedidos`
+  ADD CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `productos`
+--
+ALTER TABLE `productos`
+  ADD CONSTRAINT `fk_producto_categoria` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`) ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `servicios_mantenimiento`
+--
+
+CREATE TABLE `servicios_mantenimiento` (
+  `id_servicio` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text DEFAULT NULL,
+  `precio` decimal(10,2) NOT NULL,
+  `duracion_estimada` varchar(50) DEFAULT NULL,
+  `garantia_dias` int(11) DEFAULT 30,
+  `categoria_servicio` enum('laptop','smartphone','pc','redes','seguridad','otros') NOT NULL,
+  `estado` enum('activo','inactivo') DEFAULT 'activo',
+  `fecha_creacion` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id_servicio`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `servicios_mantenimiento`
+--
+
+INSERT INTO `servicios_mantenimiento` (`id_servicio`, `nombre`, `descripcion`, `precio`, `duracion_estimada`, `garantia_dias`, `categoria_servicio`, `estado`, `fecha_creacion`) VALUES
+(1, 'Limpieza Profunda de Laptop', 'Limpieza interna completa, cambio de pasta térmica y optimización del sistema', 150.00, '2-3 horas', 90, 'laptop', 'activo', '2025-06-13 15:19:48'),
+(2, 'Cambio de Pantalla Smartphone', 'Reemplazo de pantalla rota con repuesto original y garantía', 200.00, '1-2 horas', 180, 'smartphone', 'activo', '2025-06-13 15:19:48'),
+(3, 'Ensamblaje de PC Gaming', 'Ensamblaje completo de computadora gaming con componentes de alta calidad', 300.00, '4-6 horas', 365, 'pc', 'activo', '2025-06-13 15:19:48'),
+(4, 'Configuración de Red WiFi', 'Configuración completa de red WiFi para hogar o empresa', 120.00, '1-2 horas', 60, 'redes', 'activo', '2025-06-13 15:19:48'),
+(5, 'Limpieza de Malware', 'Eliminación completa de virus, spyware y malware del sistema', 80.00, '2-4 horas', 30, 'seguridad', 'activo', '2025-06-13 15:19:48'),
+(6, 'Recuperación de Datos', 'Recuperación de archivos perdidos o eliminados accidentalmente', 250.00, '24-48 horas', 90, 'otros', 'activo', '2025-06-13 15:19:48'),
+(7, 'Instalación de Windows', 'Instalación limpia de Windows con drivers y software básico', 60.00, '2-3 horas', 30, 'pc', 'activo', '2025-06-13 15:19:48'),
+(8, 'Actualización de RAM', 'Instalación de memoria RAM adicional para mejorar rendimiento', 180.00, '1 hora', 90, 'pc', 'activo', '2025-06-13 15:19:48');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `solicitudes_servicio`
+--
+
+CREATE TABLE `solicitudes_servicio` (
+  `id_solicitud` int(11) NOT NULL AUTO_INCREMENT,
+  `id_usuario` int(11) NOT NULL,
+  `id_servicio` int(11) NOT NULL,
+  `descripcion_problema` text NOT NULL,
+  `marca_modelo` varchar(100) DEFAULT NULL,
+  `fecha_solicitud` datetime DEFAULT current_timestamp(),
+  `fecha_agendada` datetime DEFAULT NULL,
+  `estado` enum('pendiente','confirmada','en_proceso','completada','cancelada') DEFAULT 'pendiente',
+  `precio_final` decimal(10,2) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  PRIMARY KEY (`id_solicitud`),
+  KEY `id_usuario` (`id_usuario`),
+  KEY `id_servicio` (`id_servicio`),
+  CONSTRAINT `fk_solicitud_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE,
+  CONSTRAINT `fk_solicitud_servicio` FOREIGN KEY (`id_servicio`) REFERENCES `servicios_mantenimiento` (`id_servicio`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `historial_servicios`
+--
+
+CREATE TABLE `historial_servicios` (
+  `id_historial` int(11) NOT NULL AUTO_INCREMENT,
+  `id_solicitud` int(11) NOT NULL,
+  `id_tecnico` int(11) DEFAULT NULL,
+  `fecha_inicio` datetime DEFAULT NULL,
+  `fecha_fin` datetime DEFAULT NULL,
+  `trabajo_realizado` text DEFAULT NULL,
+  `repuestos_utilizados` text DEFAULT NULL,
+  `costo_repuestos` decimal(10,2) DEFAULT 0.00,
+  `tiempo_total_horas` decimal(4,2) DEFAULT NULL,
+  `calidad_servicio` enum('excelente','bueno','regular','malo') DEFAULT NULL,
+  `comentarios_cliente` text DEFAULT NULL,
+  PRIMARY KEY (`id_historial`),
+  KEY `id_solicitud` (`id_solicitud`),
+  KEY `id_tecnico` (`id_tecnico`),
+  CONSTRAINT `fk_historial_solicitud` FOREIGN KEY (`id_solicitud`) REFERENCES `solicitudes_servicio` (`id_solicitud`) ON DELETE CASCADE,
+  CONSTRAINT `fk_historial_tecnico` FOREIGN KEY (`id_tecnico`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Índices para las nuevas tablas
+--
+
+CREATE INDEX `idx_servicios_categoria` ON `servicios_mantenimiento`(`categoria_servicio`);
+CREATE INDEX `idx_solicitudes_usuario` ON `solicitudes_servicio`(`id_usuario`);
+CREATE INDEX `idx_solicitudes_estado` ON `solicitudes_servicio`(`estado`);
+CREATE INDEX `idx_historial_solicitud` ON `historial_servicios`(`id_solicitud`);
+
+--
+-- AUTO_INCREMENT para las nuevas tablas
+--
+
+ALTER TABLE `servicios_mantenimiento`
+  MODIFY `id_servicio` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+ALTER TABLE `solicitudes_servicio`
+  MODIFY `id_solicitud` int(11) NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `historial_servicios`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT;
+
+COMMIT;

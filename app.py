@@ -319,8 +319,14 @@ def eliminar_servicio_carrito(id_servicio):
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
+        # Contar productos en el carrito
         carrito_count = Carrito.query.filter_by(id_usuario=current_user.id_usuario).count()
-        g.carrito_count = carrito_count
+        
+        # Contar servicios en el carrito
+        servicios_count = len(session.get('servicios_carrito', {}))
+        
+        # Total de items en el carrito
+        g.carrito_count = carrito_count + servicios_count
     else:
         g.carrito_count = 0
 
@@ -510,15 +516,33 @@ def checkout():
                 flash('Stock insuficiente para algunos productos')
                 return redirect(url_for('carrito'))
         
+        # Limpiar carrito de productos
         Carrito.query.filter_by(id_usuario=current_user.id_usuario).delete()
+        
+        # Limpiar carrito de servicios de la sesión
+        if 'servicios_carrito' in session:
+            del session['servicios_carrito']
+            session.modified = True
+        
         db.session.commit()
         
-        flash('Pedido realizado con éxito')
+        flash('Pedido realizado con éxito. Los servicios de mantenimiento se agendarán pronto.')
         return redirect(url_for('user_dashboard'))
     
     items = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
-    total = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items)
-    return render_template('checkout.html', items=items, total=total)
+    servicios_carrito = session.get('servicios_carrito', {})
+    
+    # Calcular totales
+    total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items) if items else Decimal('0')
+    total_servicios = sum(Decimal(str(servicio['precio'])) for servicio in servicios_carrito.values()) if servicios_carrito else Decimal('0')
+    total = total_productos + total_servicios
+    
+    return render_template('checkout.html', 
+                         items=items, 
+                         servicios=servicios_carrito,
+                         total=total,
+                         total_productos=total_productos,
+                         total_servicios=total_servicios)
 
 @app.route('/registro', methods=['GET', 'POST'])
 def registro():
