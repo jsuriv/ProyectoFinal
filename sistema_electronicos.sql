@@ -557,8 +557,7 @@ ALTER TABLE `facturas`
 --
 -- Filtros para la tabla `pedidos`
 --
-ALTER TABLE `pedidos`
-  ADD CONSTRAINT `pedidos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE;
+-- La restricción de clave foránea ya está definida en la creación de la tabla
 
 --
 -- Filtros para la tabla `productos`
