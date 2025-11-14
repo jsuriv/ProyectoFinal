@@ -318,6 +318,7 @@
     <!-- Script para el Bot de Ayuda Inteligente -->
     <script>
     (function() {
+<<<<<<< HEAD
         // Esperar a que el DOM esté completamente cargado
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initBot);
@@ -349,10 +350,48 @@
                     </div>
                     <div class="message-content">
                         <p>${message}</p>
+=======
+        const botWindow = document.getElementById('helpBotWindow');
+        const botToggle = document.getElementById('helpBotToggle');
+        const closeBotBtn = document.getElementById('closeBotBtn');
+        const botMessages = document.getElementById('helpBotMessages');
+        const botInput = document.getElementById('helpBotInput');
+        const sendBotBtn = document.getElementById('sendBotBtn');
+        const quickBtns = document.querySelectorAll('.quick-btn');
+
+        // Función para agregar mensaje del usuario
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'user-message';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div class="message-content">
+                    <p>${message}</p>
+                </div>
+            `;
+            botMessages.appendChild(messageDiv);
+            botMessages.scrollTop = botMessages.scrollHeight;
+        }
+
+        // Función para agregar mensaje del bot
+        function addBotMessage(htmlContent) {
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'bot-message';
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        ${htmlContent}
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
                     </div>
                 `;
                 botMessages.appendChild(messageDiv);
                 botMessages.scrollTop = botMessages.scrollHeight;
+<<<<<<< HEAD
             }
 
             // Función para agregar mensaje del bot
@@ -547,6 +586,170 @@
                 }
             });
         }
+=======
+            }, 500);
+        }
+
+        // Función para mostrar productos
+        function displayProducts(productos, titulo) {
+            if (!productos || productos.length === 0) {
+                addBotMessage(`<p>😔 No encontré productos que coincidan con tu búsqueda. Intenta con otros términos o revisa nuestras categorías.</p>`);
+                return;
+            }
+
+            let html = `<p><strong>${titulo}</strong></p>`;
+            productos.forEach(producto => {
+                html += `
+                    <div class="product-card-bot">
+                        <h6>${producto.nombre}</h6>
+                        <p>${producto.descripcion.substring(0, 100)}${producto.descripcion.length > 100 ? '...' : ''}</p>
+                        <p><strong>Categoría:</strong> ${producto.categoria}</p>
+                        <p class="price">Bs. ${producto.precio.toFixed(2)}</p>
+                        <p><small>Stock: ${producto.stock} unidades</small></p>
+                        <a href="${producto.url}" target="_blank">Ver detalles →</a>
+                    </div>
+                `;
+            });
+            addBotMessage(html);
+        }
+
+        // Función para procesar mensaje del usuario usando la API unificada
+        async function processMessage(message) {
+            if (!message || !message.trim()) {
+                return;
+            }
+            
+            addUserMessage(message);
+            addBotMessage('<p>💭 Procesando tu solicitud...</p>');
+            
+            try {
+                // Usar la API unificada del bot
+                const response = await fetch('/api/bot/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: message})
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    addBotMessage(`<p>❌ ${data.error || 'Error al procesar tu mensaje'}</p>`);
+                    return;
+                }
+                
+                // Procesar respuesta según el tipo
+                switch(data.tipo) {
+                    case 'buscar':
+                        if (data.productos && data.productos.length > 0) {
+                            displayProducts(data.productos, `🔍 ${data.mensaje}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos que coincidan con tu búsqueda. Intenta con otros términos.</p>');
+                        }
+                        break;
+                    
+                    case 'recomendar':
+                        if (data.productos && data.productos.length > 0) {
+                            const categoriaText = data.categoria ? ` de ${data.categoria}` : '';
+                            displayProducts(data.productos, `💡 ${data.mensaje}${categoriaText}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos que coincidan con tus necesidades. Intenta ser más específico o ajusta tu presupuesto.</p>');
+                        }
+                        break;
+                    
+                    case 'categorias':
+                        let html = `<p><strong>📂 ${data.mensaje}:</strong></p><ul>`;
+                        data.categorias.forEach(cat => {
+                            html += `<li><strong>${cat.nombre}</strong></li>`;
+                        });
+                        html += '</ul><p>💡 Puedes buscar productos de una categoría específica, por ejemplo: "buscar productos de smartphones"</p>';
+                        addBotMessage(html);
+                        break;
+                    
+                    case 'precio':
+                        if (data.productos && data.productos.length > 0) {
+                            displayProducts(data.productos, `💰 ${data.mensaje}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos en ese rango de precio. Intenta con otro rango.</p>');
+                        }
+                        break;
+                    
+                    default:
+                        // Respuesta de ayuda
+                        let ayudaHtml = `<p>${data.mensaje}</p>`;
+                        if (data.opciones && data.opciones.length > 0) {
+                            ayudaHtml += '<ul>';
+                            data.opciones.forEach(opcion => {
+                                ayudaHtml += `<li>${opcion}</li>`;
+                            });
+                            ayudaHtml += '</ul>';
+                        }
+                        ayudaHtml += '<p>💡 Ejemplos de uso:</p><ul>';
+                        ayudaHtml += '<li><strong>"buscar laptop"</strong> - Busca productos específicos</li>';
+                        ayudaHtml += '<li><strong>"recomiéndame un celular hasta 3000 bs"</strong> - Recomendaciones con presupuesto</li>';
+                        ayudaHtml += '<li><strong>"productos baratos"</strong> - Productos económicos</li>';
+                        ayudaHtml += '<li><strong>"categorías"</strong> - Ver todas las categorías</li>';
+                        ayudaHtml += '</ul>';
+                        addBotMessage(ayudaHtml);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addBotMessage('<p>❌ Error de conexión. Por favor, verifica tu conexión a internet.</p>');
+            }
+        }
+
+        // Función para enviar mensaje
+        function sendMessage() {
+            const message = botInput.value.trim();
+            if (!message) return;
+
+            processMessage(message);
+            botInput.value = '';
+        }
+
+        // Event listeners
+        botToggle.addEventListener('click', () => {
+            botWindow.classList.toggle('active');
+        });
+
+        closeBotBtn.addEventListener('click', () => {
+            botWindow.classList.remove('active');
+        });
+
+        sendBotBtn.addEventListener('click', sendMessage);
+
+        botInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Botones rápidos
+        quickBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-action');
+                let message = '';
+
+                switch(action) {
+                    case 'buscar':
+                        message = 'Buscar productos';
+                        break;
+                    case 'recomendar':
+                        message = 'Recomiéndame productos';
+                        break;
+                    case 'precio':
+                        message = 'Productos por precio';
+                        break;
+                    case 'categorias':
+                        message = 'Categorías';
+                        break;
+                }
+
+                if (message) {
+                    processMessage(message);
+                }
+            });
+        });
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
     })();
     </script>
     <!-- Script para colores aleatorios en iconos -->
@@ -710,12 +913,18 @@
 
             // Detectar categoría actual desde el servidor
             var serverCatSlug = null;
+<<<<<<< HEAD
             /* eslint-disable */
             {% if categoria_actual %}
             {% set cat_slug = categoria_actual.nombre|lower|replace(' ', '-') %}
             serverCatSlug = "{{ cat_slug }}";
             {% endif %}
             /* eslint-enable */
+=======
+            {% if categoria_actual %}
+                serverCatSlug = '{{ categoria_actual.nombre|lower|replace(' ', '-') }}';
+            {% endif %}
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
 
             var savedSw = localStorage.getItem('ew_theme_sw');
             var themeToApply = null;

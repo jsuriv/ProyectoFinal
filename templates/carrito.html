@@ -3,8 +3,13 @@
 {% block title %}Carrito de Compras - ElectroWorld{% endblock %}
 
 {% block content %}
+<<<<<<< HEAD
 <div class="container mt-4 carrito-container">
     <h1 class="mb-4" style="color: var(--text-dark); font-weight: 600;">Carrito de Compras</h1>
+=======
+<div class="container mt-4">
+    <h1 class="mb-4">Carrito de Compras</h1>
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
     
     {% if items or servicios %}
     <div class="row">
@@ -26,8 +31,13 @@
                                  class="img-fluid rounded"
                                  style="width: 100px; height: 100px; object-fit: cover;">
                             {% else %}
+<<<<<<< HEAD
                             <div class="rounded p-2 text-center" style="width: 100px; height: 100px; background: var(--light-gray); border: 1px solid var(--border-color);">
                                 <i class="bi bi-image" style="font-size: 2rem; color: var(--medium-gray);"></i>
+=======
+                            <div class="bg-light rounded p-2 text-center" style="width: 100px; height: 100px;">
+                                <i class="bi bi-image text-muted" style="font-size: 2rem;"></i>
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
                             </div>
                             {% endif %}
                         </div>
@@ -76,7 +86,11 @@
                     {% for id_servicio, servicio in servicios.items() %}
                     <div class="row mb-4 align-items-center">
                         <div class="col-md-2">
+<<<<<<< HEAD
                             <div class="bg-primary rounded p-3 text-center" style="width: 100px; height: 100px; background: var(--primary-green) !important; color: var(--dark-black) !important;">
+=======
+                            <div class="bg-primary rounded p-3 text-center text-white" style="width: 100px; height: 100px;">
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
                                 <i class="bi bi-tools" style="font-size: 2.5rem;"></i>
                             </div>
                         </div>
