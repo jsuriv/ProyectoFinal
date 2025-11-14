@@ -4,6 +4,56 @@
 
 {% block content %}
 <div class="container">
+    <!-- Carrusel de Productos Destacados -->
+    {% if productos_aleatorios and productos_aleatorios|length > 0 %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-4 text-center">Productos Destacados</h3>
+            <div id="productosCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="3000">
+                <div class="carousel-indicators">
+                    {% for producto in productos_aleatorios %}
+                    <button type="button" data-bs-target="#productosCarousel" data-bs-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %} aria-label="Slide {{ loop.index }}"></button>
+                    {% endfor %}
+                </div>
+                <div class="carousel-inner">
+                    {% for producto in productos_aleatorios %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <a href="{{ url_for('producto', id=producto.id_producto) }}" class="carousel-product-link">
+                            <div class="carousel-image-wrapper">
+                                {% if producto.imagen %}
+                                <img src="{{ url_for('serve_image', filename=producto.imagen) }}" 
+                                     class="carousel-product-image" 
+                                     alt="{{ producto.nombre }}">
+                                {% else %}
+                                <div class="carousel-placeholder">
+                                    <i class="bi bi-image"></i>
+                                    <p>{{ producto.nombre }}</p>
+                                </div>
+                                {% endif %}
+                                <div class="carousel-overlay">
+                                    <div class="carousel-product-info">
+                                        <h4 class="carousel-product-name">{{ producto.nombre }}</h4>
+                                        <p class="carousel-product-price">Bs. {{ "%.2f"|format(producto.precio) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#productosCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Anterior</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#productosCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Siguiente</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Barra de búsqueda -->
     <div class="row mb-4">
         <div class="col-md-8 mx-auto">
@@ -42,7 +92,16 @@
             <div class="row">
                 {% for producto in productos %}
                 <div class="col-md-3 mb-4">
-                    <div class="card h-100 product-card">
+                    <div class="card h-100 product-card" 
+                         data-producto-id="{{ producto.id_producto }}"
+                         data-producto-nombre="{{ producto.nombre }}"
+                         data-producto-descripcion="{{ producto.descripcion }}"
+                         data-producto-precio="{{ producto.precio }}"
+                         data-producto-stock="{{ producto.stock }}"
+                         data-producto-categoria="{{ producto.categoria.nombre if producto.categoria else 'Sin categoría' }}"
+                         data-producto-imagen="{{ url_for('serve_image', filename=producto.imagen) if producto.imagen else '' }}"
+                         data-producto-url="{{ url_for('producto', id=producto.id_producto) }}"
+                         style="cursor: pointer;">
                         {% if producto.imagen %}
                         <img src="{{ url_for('serve_image', filename=producto.imagen) }}" 
                              class="card-img-top" 
@@ -58,14 +117,19 @@
                             <h5 class="card-title">{{ producto.nombre }}</h5>
                             <p class="card-text">{{ producto.descripcion[:100] }}...</p>
                             <p class="card-text"><strong>Precio: Bs. {{ "%.2f"|format(producto.precio) }}</strong></p>
-                            <div class="d-grid">
-                                <form action="{{ url_for('agregar_al_carrito') }}" method="POST" class="d-inline">
+                            <div class="d-grid gap-2">
+                                <form action="{{ url_for('agregar_al_carrito') }}" method="POST" class="d-inline" onclick="event.stopPropagation();">
                                     <input type="hidden" name="id_producto" value="{{ producto.id_producto }}">
                                     <input type="hidden" name="cantidad" value="1">
                                     <button type="submit" class="btn btn-primary w-100">
                                         <i class="bi bi-cart-plus"></i> Agregar al Carrito
                                     </button>
                                 </form>
+                                <a href="{{ url_for('producto', id=producto.id_producto) }}" 
+                                   class="btn btn-outline-primary w-100"
+                                   onclick="event.stopPropagation();">
+                                    Ver Detalles
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -161,14 +225,54 @@
 
 {% block scripts %}
 <script>
-function agregarAlCarrito(productoId) {
-    // Implementar lógica para agregar al carrito
-    alert('Producto agregado al carrito');
+// Función para mostrar vista rápida de producto
+function showQuickView(producto) {
+    const modal = new bootstrap.Modal(document.getElementById('quickViewModal'));
+    
+    // Llenar datos del modal
+    document.getElementById('quickViewImage').src = producto.imagen || '';
+    document.getElementById('quickViewNombre').textContent = producto.nombre;
+    document.getElementById('quickViewCategoria').textContent = producto.categoria || 'Sin categoría';
+    document.getElementById('quickViewDescripcion').textContent = producto.descripcion || 'Sin descripción';
+    document.getElementById('quickViewPrecio').textContent = producto.precio.toFixed(2);
+    document.getElementById('quickViewStock').textContent = producto.stock + ' unidades';
+    document.getElementById('quickViewIdProducto').value = producto.id;
+    document.getElementById('quickViewCantidad').max = producto.stock;
+    document.getElementById('quickViewCantidad').value = 1;
+    document.getElementById('quickViewVerDetalles').href = producto.url;
+    
+    // Mostrar modal
+    modal.show();
 }
 
-function verDetalles(productoId) {
-    // Implementar lógica para mostrar detalles del producto
-    $('#productoModal').modal('show');
-}
+// Delegación de eventos para productos con clase 'product-card'
+document.addEventListener('click', function(e) {
+    // Buscar el contenedor del producto más cercano
+    const productCard = e.target.closest('.product-card');
+    if (!productCard) return;
+    
+    // Evitar si se hace clic en un botón o enlace
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.closest('button') || e.target.closest('a')) {
+        return;
+    }
+    
+    // Obtener datos de atributos data-
+    const productoId = productCard.dataset.productoId;
+    
+    if (productoId) {
+        const producto = {
+            id: productoId,
+            nombre: productCard.dataset.productoNombre || 'Sin nombre',
+            descripcion: productCard.dataset.productoDescripcion || 'Sin descripción',
+            precio: parseFloat(productCard.dataset.productoPrecio) || 0,
+            stock: parseInt(productCard.dataset.productoStock) || 0,
+            categoria: productCard.dataset.productoCategoria || 'Sin categoría',
+            imagen: productCard.dataset.productoImagen || '',
+            url: productCard.dataset.productoUrl || ''
+        };
+        
+        showQuickView(producto);
+    }
+});
 </script>
 {% endblock %} 

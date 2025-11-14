@@ -238,8 +238,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para cargar los datos de la factura
     function cargarFactura(idFactura) {
         fetch(`/api/facturas/${idFactura}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
                 // Actualizar datos básicos
                 document.getElementById('facturaNumero').textContent = data.numero_factura;
                 document.getElementById('facturaFecha').textContent = new Date(data.fecha_emision).toLocaleString();
@@ -264,10 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>
                                 <div class="d-flex align-items-center">
                                     ${detalle.producto.imagen ? 
-                                        `<img src="/images/${detalle.producto.imagen}" 
+                                        `<img src="${detalle.producto.imagen}" 
                                               alt="${detalle.producto.nombre}" 
                                               class="img-thumbnail me-2" 
-                                              style="width: 50px; height: 50px; object-fit: cover;">` 
+                                              style="width: 50px; height: 50px; object-fit: cover;"
+                                              onerror="this.style.display='none';">` 
                                         : ''}
                                     ${detalle.producto.nombre}
                                 </div>
@@ -307,16 +316,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Actualizar enlace de descarga
                 document.getElementById('btnDescargarFactura').href = `/factura/descargar/${idFactura}`;
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error al cargar factura:', error);
+                alert('Error al cargar la factura: ' + error.message);
+            });
     }
 
     // Evento para abrir el modal de ver factura
     const verFacturaModal = document.getElementById('verFacturaModal');
-    verFacturaModal.addEventListener('show.bs.modal', function(event) {
-        const button = event.relatedTarget;
-        const idFactura = button.getAttribute('data-factura-id');
-        cargarFactura(idFactura);
-    });
+    if (verFacturaModal) {
+        verFacturaModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const idFactura = button.getAttribute('data-factura-id');
+            if (idFactura) {
+                cargarFactura(idFactura);
+            } else {
+                console.error('No se encontró el ID de factura');
+                alert('Error: No se pudo obtener el ID de la factura');
+            }
+        });
+    }
 });
 </script>
 {% endblock %} 

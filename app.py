@@ -220,9 +220,12 @@ def load_user(user_id):
 # Rutas principales
 @app.route('/')
 def index():
+    import random
     productos = Producto.query.filter_by(estado='activo').all()
+    # Obtener productos aleatorios para el carrusel (máximo 6)
+    productos_aleatorios = random.sample(productos, min(6, len(productos))) if len(productos) > 0 else []
     categorias = Categoria.query.all()
-    return render_template('index.html', productos=productos, categorias=categorias)
+    return render_template('index.html', productos=productos, productos_aleatorios=productos_aleatorios, categorias=categorias)
 
 @app.route('/buscar_productos')
 def buscar_productos():
@@ -1363,47 +1366,63 @@ def serve_image(filename):
 @app.route('/api/facturas/<int:id_factura>')
 @login_required
 def get_factura(id_factura):
-    factura = Factura.query.get_or_404(id_factura)
-    
-    # Verificar permisos
-    if not current_user.is_admin() and factura.pedido.id_usuario != current_user.id_usuario:
-        return jsonify({'error': 'No autorizado'}), 403
-    
-    return jsonify({
-        'id_factura': factura.id_factura,
-        'numero_factura': factura.numero_factura,
-        'fecha_emision': factura.fecha_emision.isoformat(),
-        'estado': factura.estado,
-        'subtotal': float(factura.subtotal),
-        'iva': float(factura.iva),
-        'total': float(factura.total),
-        'pedido': {
-            'id_pedido': factura.pedido.id_pedido,
-            'usuario': {
-                'nombre': factura.pedido.usuario.nombre,
-                'nit': factura.pedido.usuario.nit
-            },
-            'direccion_envio': factura.pedido.direccion_envio,
-            'telefono': factura.pedido.telefono,
-            'detalles': [{
+    try:
+        factura = Factura.query.get_or_404(id_factura)
+        
+        # Verificar permisos
+        if not current_user.is_admin() and factura.pedido.id_usuario != current_user.id_usuario:
+            return jsonify({'error': 'No autorizado'}), 403
+        
+        # Construir respuesta con manejo de errores
+        detalles_data = []
+        for detalle in factura.pedido.detalles:
+            detalles_data.append({
                 'producto': {
-                    'nombre': detalle.producto.nombre,
-                    'imagen': detalle.producto.imagen
+                    'nombre': detalle.producto.nombre if detalle.producto else 'Producto eliminado',
+                    'imagen': url_for('serve_image', filename=detalle.producto.imagen) if detalle.producto and detalle.producto.imagen else None
                 },
                 'cantidad': detalle.cantidad,
                 'precio_unitario': float(detalle.precio_unitario),
                 'subtotal': float(detalle.subtotal)
-            } for detalle in factura.pedido.detalles]
-        },
-        'estados': [{
-            'estado': estado.estado,
-            'fecha_cambio': estado.fecha_cambio.isoformat(),
-            'admin': {
-                'nombre': estado.admin.nombre
-            } if estado.admin else None,
-            'observacion': estado.observacion
-        } for estado in factura.estados]
-    })
+            })
+        
+        estados_data = []
+        if hasattr(factura, 'estados') and factura.estados:
+            for estado in factura.estados:
+                estados_data.append({
+                    'estado': estado.estado,
+                    'fecha_cambio': estado.fecha_cambio.isoformat() if estado.fecha_cambio else None,
+                    'admin': {
+                        'nombre': estado.admin.nombre
+                    } if estado.admin else None,
+                    'observacion': estado.observacion or ''
+                })
+        
+        return jsonify({
+            'id_factura': factura.id_factura,
+            'numero_factura': factura.numero_factura,
+            'fecha_emision': factura.fecha_emision.isoformat() if factura.fecha_emision else None,
+            'estado': factura.estado,
+            'subtotal': float(factura.subtotal) if factura.subtotal else 0.0,
+            'iva': float(factura.iva) if factura.iva else 0.0,
+            'total': float(factura.total) if factura.total else 0.0,
+            'pedido': {
+                'id_pedido': factura.pedido.id_pedido,
+                'usuario': {
+                    'nombre': factura.pedido.usuario.nombre if factura.pedido.usuario else 'Usuario eliminado',
+                    'nit': factura.pedido.usuario.nit if factura.pedido.usuario else None
+                },
+                'direccion_envio': factura.pedido.direccion_envio or '',
+                'telefono': factura.pedido.telefono or '',
+                'detalles': detalles_data
+            },
+            'estados': estados_data
+        })
+    except Exception as e:
+        print(f"Error en get_factura: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Error al obtener la factura: {str(e)}'}), 500
 
 @app.route('/mis_facturas')
 @login_required
@@ -2635,17 +2654,80 @@ def api_bot_chat():
                 'mensaje': f"Encontré {len(productos)} producto(s) en ese rango de precio"
             })
         
+        elif intencion['tipo'] == 'mas_vendidos':
+            # Productos más vendidos
+            productos = obtener_productos_mas_vendidos(categoria=intencion.get('categoria'))
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'mas_vendidos',
+                'productos': productos,
+                'total': len(productos),
+                'mensaje': f"Estos son los {len(productos)} productos más vendidos" + (f" en {intencion.get('categoria')}" if intencion.get('categoria') else "")
+            })
+        
+        elif intencion['tipo'] == 'comparar':
+            # Comparar productos
+            comparacion = comparar_productos_bot(intencion.get('productos', []))
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'comparar',
+                'comparacion': comparacion,
+                'mensaje': comparacion.get('mensaje', 'Comparación de productos')
+            })
+        
+        elif intencion['tipo'] == 'similares':
+            # Productos similares
+            productos = buscar_productos_similares(intencion.get('query', ''))
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'similares',
+                'productos': productos,
+                'total': len(productos),
+                'mensaje': f"Encontré {len(productos)} producto(s) similar(es)"
+            })
+        
+        elif intencion['tipo'] == 'ofertas':
+            # Productos en oferta (productos con buen stock y precio competitivo)
+            productos = obtener_productos_oferta()
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'ofertas',
+                'productos': productos,
+                'total': len(productos),
+                'mensaje': f"Tenemos {len(productos)} producto(s) con excelentes precios"
+            })
+        
+        elif intencion['tipo'] == 'estadisticas':
+            # Estadísticas de ventas
+            estadisticas = obtener_estadisticas_ventas()
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'estadisticas',
+                'estadisticas': estadisticas,
+                'mensaje': 'Estadísticas de ventas'
+            })
+        
         else:
             # Respuesta genérica
             return jsonify({
                 'success': True,
                 'tipo': 'ayuda',
-                'mensaje': 'Puedo ayudarte a buscar productos, recomendar según tus necesidades, o mostrar categorías. ¿Qué necesitas?',
+                'mensaje': 'Puedo ayudarte con:',
                 'opciones': [
                     'Buscar productos específicos',
                     'Recomendaciones personalizadas',
                     'Ver categorías disponibles',
-                    'Productos por precio'
+                    'Productos por precio',
+                    'Productos más vendidos',
+                    'Comparar productos',
+                    'Productos similares',
+                    'Ver ofertas',
+                    'Estadísticas de ventas'
                 ]
             })
     
@@ -2659,8 +2741,49 @@ def detectar_intencion(mensaje):
     """Detecta la intención del usuario basándose en el mensaje"""
     intencion = {'tipo': 'ayuda'}
     
+    # Detectar productos más vendidos
+    if any(palabra in mensaje for palabra in ['mas vendido', 'más vendido', 'mas vendidos', 'más vendidos', 'popular', 'populares', 'top', 'mejor vendido', 'mejor vendidos']):
+        intencion['tipo'] = 'mas_vendidos'
+        # Extraer categoría si se menciona
+        categorias_keywords = {
+            'smartphone': ['smartphone', 'celular', 'telefono', 'teléfono', 'móvil', 'movil'],
+            'laptop': ['laptop', 'portatil', 'portátil', 'notebook', 'computadora'],
+            'tablet': ['tablet', 'ipad', 'tableta'],
+            'accesorio': ['accesorio', 'auricular', 'audifono', 'cargador']
+        }
+        for cat_name, keywords in categorias_keywords.items():
+            if any(keyword in mensaje for keyword in keywords):
+                intencion['categoria'] = cat_name
+                break
+    
+    # Detectar comparación de productos
+    elif any(palabra in mensaje for palabra in ['comparar', 'comparación', 'diferencia', 'diferencias', 'vs', 'versus', 'cual es mejor']):
+        intencion['tipo'] = 'comparar'
+        # Intentar extraer nombres de productos
+        productos = re.findall(r'([A-Za-z0-9\s]+?)(?:\s+vs\s+|\s+versus\s+|,|$)', mensaje, re.IGNORECASE)
+        if len(productos) >= 2:
+            intencion['productos'] = [p.strip() for p in productos[:2]]
+    
+    # Detectar productos similares
+    elif any(palabra in mensaje for palabra in ['similar', 'similares', 'parecido', 'parecidos', 'alternativa', 'alternativas', 'como', 'equivalente']):
+        intencion['tipo'] = 'similares'
+        # Extraer nombre del producto
+        palabras_eliminar = ['similar', 'similares', 'parecido', 'parecidos', 'alternativa', 'alternativas', 'como', 'equivalente', 'a', 'productos']
+        query = mensaje
+        for palabra in palabras_eliminar:
+            query = re.sub(r'\b' + palabra + r'\b', '', query, flags=re.IGNORECASE)
+        intencion['query'] = query.strip()
+    
+    # Detectar productos en oferta o con descuento
+    elif any(palabra in mensaje for palabra in ['oferta', 'ofertas', 'descuento', 'descuentos', 'promoción', 'promocion', 'rebaja', 'rebajas']):
+        intencion['tipo'] = 'ofertas'
+    
+    # Detectar estadísticas de ventas
+    elif any(palabra in mensaje for palabra in ['estadistica', 'estadística', 'estadisticas', 'estadísticas', 'ventas', 'venta', 'venta mas', 'mejor venta']):
+        intencion['tipo'] = 'estadisticas'
+    
     # Detectar búsqueda
-    if any(palabra in mensaje for palabra in ['buscar', 'busco', 'encontrar', 'quiero', 'necesito comprar']):
+    elif any(palabra in mensaje for palabra in ['buscar', 'busco', 'encontrar', 'quiero', 'necesito comprar']):
         intencion['tipo'] = 'buscar'
         # Extraer término de búsqueda
         palabras_busqueda = ['buscar', 'busco', 'encontrar', 'quiero', 'necesito comprar']
@@ -2729,6 +2852,7 @@ def buscar_productos_bot(query='', categoria=None, precio_max=None, precio_min=N
             'precio': float(producto.precio),
             'stock': producto.stock,
             'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+            'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
             'url': url_for('producto', id=producto.id_producto)
         })
     
@@ -2787,6 +2911,7 @@ def recomendar_productos_bot(necesidad='', presupuesto=None, uso=''):
             'precio': float(producto.precio),
             'stock': producto.stock,
             'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+            'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
             'url': url_for('producto', id=producto.id_producto)
         })
     
@@ -2794,6 +2919,285 @@ def recomendar_productos_bot(necesidad='', presupuesto=None, uso=''):
         'productos': productos_data,
         'categoria': categoria_nombre
     }
+
+def obtener_productos_mas_vendidos(categoria=None, limite=10):
+    """Obtiene los productos más vendidos basándose en los detalles de pedidos"""
+    try:
+        # Consulta para obtener productos más vendidos
+        query = db.session.query(
+            Producto,
+            func.sum(DetallePedido.cantidad).label('total_vendido')
+        ).join(
+            DetallePedido, Producto.id_producto == DetallePedido.id_producto
+        ).join(
+            Pedido, DetallePedido.id_pedido == Pedido.id_pedido
+        ).filter(
+            Pedido.estado != 'cancelado',
+            Producto.estado == 'activo'
+        )
+        
+        # Filtrar por categoría si se especifica
+        if categoria:
+            categoria_obj = Categoria.query.filter(
+                Categoria.nombre.ilike(f'%{categoria}%')
+            ).first()
+            if categoria_obj:
+                query = query.filter(Producto.id_categoria == categoria_obj.id_categoria)
+        
+        # Agrupar y ordenar por cantidad vendida
+        productos_vendidos = query.group_by(Producto.id_producto).order_by(
+            func.sum(DetallePedido.cantidad).desc()
+        ).limit(limite).all()
+        
+        productos_data = []
+        for producto, total_vendido in productos_vendidos:
+            productos_data.append({
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion or 'Sin descripción',
+                'precio': float(producto.precio),
+                'stock': producto.stock,
+                'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                'total_vendido': int(total_vendido or 0),
+                'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
+                'url': url_for('producto', id=producto.id_producto)
+            })
+        
+        # Si no hay productos vendidos, devolver productos con más stock
+        if not productos_data:
+            productos_query = Producto.query.filter_by(estado='activo')
+            if categoria:
+                categoria_obj = Categoria.query.filter(
+                    Categoria.nombre.ilike(f'%{categoria}%')
+                ).first()
+                if categoria_obj:
+                    productos_query = productos_query.filter_by(id_categoria=categoria_obj.id_categoria)
+            
+            productos = productos_query.order_by(Producto.stock.desc()).limit(limite).all()
+            for producto in productos:
+                productos_data.append({
+                    'id': producto.id_producto,
+                    'nombre': producto.nombre,
+                    'descripcion': producto.descripcion or 'Sin descripción',
+                    'precio': float(producto.precio),
+                    'stock': producto.stock,
+                    'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                    'total_vendido': 0,
+                    'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
+                    'url': url_for('producto', id=producto.id_producto)
+                })
+        
+        return productos_data
+    except Exception as e:
+        print(f"Error en obtener_productos_mas_vendidos: {str(e)}")
+        return []
+
+def comparar_productos_bot(nombres_productos):
+    """Compara dos productos"""
+    try:
+        if len(nombres_productos) < 2:
+            return {
+                'mensaje': 'Necesito al menos dos productos para comparar. Por ejemplo: "comparar iPhone 15 Pro vs Samsung Galaxy S24"',
+                'productos': []
+            }
+        
+        productos_encontrados = []
+        for nombre in nombres_productos[:2]:
+            producto = Producto.query.filter(
+                Producto.nombre.ilike(f'%{nombre}%'),
+                Producto.estado == 'activo'
+            ).first()
+            
+            if producto:
+                productos_encontrados.append({
+                    'id': producto.id_producto,
+                    'nombre': producto.nombre,
+                    'descripcion': producto.descripcion or 'Sin descripción',
+                    'precio': float(producto.precio),
+                    'stock': producto.stock,
+                    'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                    'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
+                    'url': url_for('producto', id=producto.id_producto)
+                })
+        
+        if len(productos_encontrados) < 2:
+            return {
+                'mensaje': f'No pude encontrar ambos productos para comparar. Encontré {len(productos_encontrados)} producto(s).',
+                'productos': productos_encontrados
+            }
+        
+        # Generar mensaje de comparación
+        p1, p2 = productos_encontrados[0], productos_encontrados[1]
+        mensaje = f"<p><strong>Comparación: {p1['nombre']} vs {p2['nombre']}</strong></p>"
+        mensaje += f"<ul>"
+        mensaje += f"<li><strong>Precio:</strong> {p1['nombre']}: Bs. {p1['precio']:.2f} | {p2['nombre']}: Bs. {p2['precio']:.2f}</li>"
+        mensaje += f"<li><strong>Stock:</strong> {p1['nombre']}: {p1['stock']} unidades | {p2['nombre']}: {p2['stock']} unidades</li>"
+        mensaje += f"<li><strong>Categoría:</strong> {p1['categoria']} | {p2['categoria']}</li>"
+        
+        if p1['precio'] < p2['precio']:
+            mensaje += f"<li>💰 <strong>{p1['nombre']}</strong> es más económico</li>"
+        elif p2['precio'] < p1['precio']:
+            mensaje += f"<li>💰 <strong>{p2['nombre']}</strong> es más económico</li>"
+        else:
+            mensaje += f"<li>💰 Ambos tienen el mismo precio</li>"
+        
+        mensaje += f"</ul>"
+        
+        return {
+            'mensaje': mensaje,
+            'productos': productos_encontrados
+        }
+    except Exception as e:
+        print(f"Error en comparar_productos_bot: {str(e)}")
+        return {
+            'mensaje': 'Error al comparar productos',
+            'productos': []
+        }
+
+def buscar_productos_similares(query):
+    """Busca productos similares basándose en nombre, categoría y precio"""
+    try:
+        if not query:
+            return []
+        
+        # Buscar el producto de referencia
+        producto_ref = Producto.query.filter(
+            Producto.nombre.ilike(f'%{query}%'),
+            Producto.estado == 'activo'
+        ).first()
+        
+        if not producto_ref:
+            # Si no se encuentra, buscar productos similares por nombre
+            productos = Producto.query.filter(
+                Producto.nombre.ilike(f'%{query}%'),
+                Producto.estado == 'activo'
+            ).limit(5).all()
+        else:
+            # Buscar productos similares (misma categoría, precio similar)
+            precio_min = producto_ref.precio * 0.7
+            precio_max = producto_ref.precio * 1.3
+            
+            productos = Producto.query.filter(
+                Producto.id_categoria == producto_ref.id_categoria,
+                Producto.id_producto != producto_ref.id_producto,
+                Producto.precio.between(precio_min, precio_max),
+                Producto.estado == 'activo'
+            ).limit(5).all()
+            
+            # Si no hay suficientes, agregar el producto de referencia
+            if len(productos) < 3:
+                productos = [producto_ref] + list(productos)
+        
+        productos_data = []
+        for producto in productos:
+            productos_data.append({
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion or 'Sin descripción',
+                'precio': float(producto.precio),
+                'stock': producto.stock,
+                'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
+                'url': url_for('producto', id=producto.id_producto)
+            })
+        
+        return productos_data
+    except Exception as e:
+        print(f"Error en buscar_productos_similares: {str(e)}")
+        return []
+
+def obtener_productos_oferta(limite=10):
+    """Obtiene productos con buen stock y precios competitivos (simulando ofertas)"""
+    try:
+        # Productos con buen stock y precio razonable (ordenados por relación precio/stock)
+        productos = Producto.query.filter(
+            Producto.estado == 'activo',
+            Producto.stock > 5
+        ).order_by(
+            Producto.precio.asc()
+        ).limit(limite).all()
+        
+        productos_data = []
+        for producto in productos:
+            productos_data.append({
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion or 'Sin descripción',
+                'precio': float(producto.precio),
+                'stock': producto.stock,
+                'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                'imagen': url_for('serve_image', filename=producto.imagen) if producto.imagen else None,
+                'url': url_for('producto', id=producto.id_producto)
+            })
+        
+        return productos_data
+    except Exception as e:
+        print(f"Error en obtener_productos_oferta: {str(e)}")
+        return []
+
+def obtener_estadisticas_ventas():
+    """Obtiene estadísticas generales de ventas"""
+    try:
+        # Total de pedidos
+        total_pedidos = Pedido.query.filter(Pedido.estado != 'cancelado').count()
+        
+        # Total de ventas
+        total_ventas = db.session.query(func.sum(Pedido.total)).filter(
+            Pedido.estado != 'cancelado'
+        ).scalar() or 0
+        
+        # Producto más vendido
+        producto_mas_vendido = db.session.query(
+            Producto.nombre,
+            func.sum(DetallePedido.cantidad).label('total')
+        ).join(
+            DetallePedido, Producto.id_producto == DetallePedido.id_producto
+        ).join(
+            Pedido, DetallePedido.id_pedido == Pedido.id_pedido
+        ).filter(
+            Pedido.estado != 'cancelado'
+        ).group_by(Producto.id_producto).order_by(
+            func.sum(DetallePedido.cantidad).desc()
+        ).first()
+        
+        # Categoría más vendida
+        categoria_mas_vendida = db.session.query(
+            Categoria.nombre,
+            func.sum(DetallePedido.cantidad).label('total')
+        ).join(
+            Producto, Categoria.id_categoria == Producto.id_categoria
+        ).join(
+            DetallePedido, Producto.id_producto == DetallePedido.id_producto
+        ).join(
+            Pedido, DetallePedido.id_pedido == Pedido.id_pedido
+        ).filter(
+            Pedido.estado != 'cancelado'
+        ).group_by(Categoria.id_categoria).order_by(
+            func.sum(DetallePedido.cantidad).desc()
+        ).first()
+        
+        estadisticas = {
+            'total_pedidos': total_pedidos,
+            'total_ventas': float(total_ventas) if total_ventas else 0,
+            'producto_mas_vendido': {
+                'nombre': producto_mas_vendido[0] if producto_mas_vendido else 'N/A',
+                'cantidad': int(producto_mas_vendido[1]) if producto_mas_vendido else 0
+            },
+            'categoria_mas_vendida': {
+                'nombre': categoria_mas_vendida[0] if categoria_mas_vendida else 'N/A',
+                'cantidad': int(categoria_mas_vendida[1]) if categoria_mas_vendida else 0
+            }
+        }
+        
+        return estadisticas
+    except Exception as e:
+        print(f"Error en obtener_estadisticas_ventas: {str(e)}")
+        return {
+            'total_pedidos': 0,
+            'total_ventas': 0,
+            'producto_mas_vendido': {'nombre': 'N/A', 'cantidad': 0},
+            'categoria_mas_vendida': {'nombre': 'N/A', 'cantidad': 0}
+        }
 
 if __name__ == '__main__':
     with app.app_context():
