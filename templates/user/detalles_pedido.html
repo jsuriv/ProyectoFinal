@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles del Pedido #{{ pedido.id_pedido }} - TechStore{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Detalles del Pedido #{{ pedido.id_pedido }}</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Información del Pedido -->
+                    <h5>Información del Pedido</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Fecha:</strong> {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</p>
+                            <p><strong>Estado:</strong> 
+                                <span class="badge {% if pedido.estado == 'entregado' %}bg-success
+                                                 {% elif pedido.estado == 'pendiente' %}bg-warning
+                                                 {% elif pedido.estado == 'cancelado' %}bg-danger
+                                                 {% else %}bg-info{% endif %}">
+                                    {{ pedido.estado|title }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Método de Pago:</strong> {{ pedido.metodo_pago or 'No especificado' }}</p>
+                            <p><strong>Dirección de Envío:</strong> {{ pedido.direccion_envio }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Productos -->
+                    <h5>Productos</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unitario</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detalle in pedido.detalles %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if detalle.producto.imagen %}
+                                            <img src="{{ url_for('serve_image', filename=detalle.producto.imagen) }}" 
+                                                 alt="{{ detalle.producto.nombre }}" 
+                                                 class="img-thumbnail me-2" 
+                                                 style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% endif %}
+                                            {{ detalle.producto.nombre }}
+                                        </div>
+                                    </td>
+                                    <td>{{ detalle.cantidad }}</td>
+                                    <td>Bs. {{ detalle.precio_unitario|round(2) }}</td>
+                                    <td>Bs. {{ detalle.subtotal|round(2) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td><strong>Bs. {{ pedido.total|round(2) }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Acciones</h4>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('mis_pedidos') }}" class="btn btn-secondary w-100 mb-2">
+                        <i class="bi bi-arrow-left"></i> Volver a Mis Pedidos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

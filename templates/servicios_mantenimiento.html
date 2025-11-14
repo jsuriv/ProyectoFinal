@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Servicios de Mantenimiento - ElectroWorld{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header de la página -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 important-text">Servicios de Mantenimiento y Reparación</h1>
+            <p class="lead">Expertos en el cuidado y reparación de tus dispositivos electrónicos</p>
+            <hr class="my-4">
+        </div>
+    </div>
+
+    <!-- Servicios principales -->
+    <div class="row mb-5">
+        <div class="col-md-6 mb-4">
+            <div class="card service-card h-100">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-laptop"></i>
+                    </div>
+                    <h3 class="card-title">Mantenimiento de Laptop</h3>
+                    <p class="card-text">Servicio completo de mantenimiento preventivo y correctivo para laptops de todas las marcas.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Limpieza interna y externa</li>
+                        <li><i class="bi bi-check-circle"></i> Cambio de pasta térmica</li>
+                        <li><i class="bi bi-check-circle"></i> Optimización del sistema operativo</li>
+                        <li><i class="bi bi-check-circle"></i> Diagnóstico completo de hardware</li>
+                        <li><i class="bi bi-check-circle"></i> Actualización de drivers</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 150</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="1">
+                            <input type="hidden" name="nombre_servicio" value="Mantenimiento de Laptop">
+                            <input type="hidden" name="precio_servicio" value="150.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card service-card h-100">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h3 class="card-title">Reparación de Smartphone</h3>
+                    <p class="card-text">Reparación profesional de smartphones y tablets con garantía y repuestos originales.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Cambio de pantalla rota</li>
+                        <li><i class="bi bi-check-circle"></i> Reemplazo de batería</li>
+                        <li><i class="bi bi-check-circle"></i> Reparación de software</li>
+                        <li><i class="bi bi-check-circle"></i> Recuperación de datos</li>
+                        <li><i class="bi bi-check-circle"></i> Reparación de conector de carga</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 200</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="2">
+                            <input type="hidden" name="nombre_servicio" value="Reparación de Smartphone">
+                            <input type="hidden" name="precio_servicio" value="200.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Servicios adicionales -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <h4 class="card-title">Reparación de PC</h4>
+                    <p class="card-text">Ensamblaje, actualización y reparación de computadoras de escritorio.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Ensamblaje de PC</li>
+                        <li><i class="bi bi-check-circle"></i> Actualización de componentes</li>
+                        <li><i class="bi bi-check-circle"></i> Instalación de software</li>
+                        <li><i class="bi bi-check-circle"></i> Diagnóstico de problemas</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 100</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="3">
+                            <input type="hidden" name="nombre_servicio" value="Reparación de PC">
+                            <input type="hidden" name="precio_servicio" value="100.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4 class="card-title">Seguridad Informática</h4>
+                    <p class="card-text">Protección completa de dispositivos contra malware y amenazas.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Instalación de antivirus</li>
+                        <li><i class="bi bi-check-circle"></i> Limpieza de malware</li>
+                        <li><i class="bi bi-check-circle"></i> Configuración de firewall</li>
+                        <li><i class="bi bi-check-circle"></i> Backup de seguridad</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 80</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="4">
+                            <input type="hidden" name="nombre_servicio" value="Seguridad Informática">
+                            <input type="hidden" name="precio_servicio" value="80.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-wifi"></i>
+                    </div>
+                    <h4 class="card-title">Redes y Conectividad</h4>
+                    <p class="card-text">Configuración y reparación de redes WiFi y conexiones de internet.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Configuración de WiFi</li>
+                        <li><i class="bi bi-check-circle"></i> Reparación de conexiones</li>
+                        <li><i class="bi bi-check-circle"></i> Optimización de red</li>
+                        <li><i class="bi bi-check-circle"></i> Instalación de routers</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 120</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="5">
+                            <input type="hidden" name="nombre_servicio" value="Redes y Conectividad">
+                            <input type="hidden" name="precio_servicio" value="120.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Servicios adicionales segunda fila -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-hdd-network"></i>
+                    </div>
+                    <h4 class="card-title">Recuperación de Datos</h4>
+                    <p class="card-text">Servicio especializado en recuperación de datos perdidos o eliminados.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Recuperación de archivos</li>
+                        <li><i class="bi bi-check-circle"></i> Recuperación de fotos</li>
+                        <li><i class="bi bi-check-circle"></i> Recuperación de documentos</li>
+                        <li><i class="bi bi-check-circle"></i> Diagnóstico gratuito</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 250</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="6">
+                            <input type="hidden" name="nombre_servicio" value="Recuperación de Datos">
+                            <input type="hidden" name="precio_servicio" value="250.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-download"></i>
+                    </div>
+                    <h4 class="card-title">Instalación de Software</h4>
+                    <p class="card-text">Instalación y configuración de software especializado y sistemas operativos.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Windows 10/11</li>
+                        <li><i class="bi bi-check-circle"></i> Office y aplicaciones</li>
+                        <li><i class="bi bi-check-circle"></i> Drivers actualizados</li>
+                        <li><i class="bi bi-check-circle"></i> Configuración inicial</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 60</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="7">
+                            <input type="hidden" name="nombre_servicio" value="Instalación de Software">
+                            <input type="hidden" name="precio_servicio" value="60.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="bi bi-memory"></i>
+                    </div>
+                    <h4 class="card-title">Actualización de Hardware</h4>
+                    <p class="card-text">Actualización de componentes para mejorar el rendimiento de tu PC.</p>
+                    <ul class="list-unstyled text-start">
+                        <li><i class="bi bi-check-circle"></i> Instalación de RAM</li>
+                        <li><i class="bi bi-check-circle"></i> Cambio de disco duro</li>
+                        <li><i class="bi bi-check-circle"></i> Instalación de SSD</li>
+                        <li><i class="bi bi-check-circle"></i> Optimización del sistema</li>
+                    </ul>
+                    <div class="mt-3">
+                        <span class="price-badge">Bs. 180</span>
+                    </div>
+                    <div class="mt-3">
+                        <form action="{{ url_for('agregar_servicio_carrito') }}" method="POST" class="d-inline">
+                            <input type="hidden" name="id_servicio" value="8">
+                            <input type="hidden" name="nombre_servicio" value="Actualización de Hardware">
+                            <input type="hidden" name="precio_servicio" value="180.00">
+                            <input type="hidden" name="tipo" value="servicio">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proceso de trabajo -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="bi bi-gear"></i> Nuestro Proceso de Trabajo</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="service-icon">
+                                <i class="bi bi-clipboard-check"></i>
+                            </div>
+                            <h5>1. Diagnóstico</h5>
+                            <p>Evaluamos el problema y damos un presupuesto detallado</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="service-icon">
+                                <i class="bi bi-tools"></i>
+                            </div>
+                            <h5>2. Reparación</h5>
+                            <p>Realizamos la reparación con técnicas profesionales</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="service-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <h5>3. Pruebas</h5>
+                            <p>Verificamos que todo funcione correctamente</p>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="service-icon">
+                                <i class="bi bi-award"></i>
+                            </div>
+                            <h5>4. Garantía</h5>
+                            <p>Entregamos con garantía y soporte post-venta</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacto para servicios -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="important-text">¿Necesitas un Servicio de Mantenimiento?</h3>
+                    <p class="lead">Contáctanos para agendar una cita o solicitar un presupuesto</p>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="bi bi-telephone me-2" style="font-size: 1.5rem; color: var(--primary-teal);"></i>
+                                <div>
+                                    <strong>Teléfono</strong><br>
+                                    +591 75781303
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="bi bi-whatsapp me-2" style="font-size: 1.5rem; color: var(--primary-teal);"></i>
+                                <div>
+                                    <strong>WhatsApp</strong><br>
+                                    +591 75781303
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <i class="bi bi-envelope me-2" style="font-size: 1.5rem; color: var(--primary-teal);"></i>
+                                <div>
+                                    <strong>Email</strong><br>
+                                    servicios@electro.world
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="https://wa.me/59175781303" class="btn btn-primary btn-lg me-3" target="_blank">
+                            <i class="bi bi-whatsapp"></i> Contactar por WhatsApp
+                        </a>
+                        <a href="mailto:servicios@electro.world" class="btn btn-outline-primary btn-lg">
+                            <i class="bi bi-envelope"></i> Enviar Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

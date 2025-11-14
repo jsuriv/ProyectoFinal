@@ -1,0 +1,1377 @@
+/* ElectroWorld - Estilos Elegantes basados en el Logo */
+
+:root {
+    /* Paleta minimalista basada en el logo3.png ElectroWorld */
+    --primary-green: #00FF41; /* Verde vibrante del logo - uso sutil */
+    --secondary-green: #00CC33; /* Verde medio - uso sutil */
+    --dark-green: #009922; /* Verde oscuro */
+    --light-green: #F0F8F0; /* Verde muy claro y sutil */
+    --accent-green: #00FF41; /* Verde para acentos */
+    --primary-black: #000000; /* Negro del logo */
+    --dark-black: #1A1A1A; /* Gris oscuro minimalista */
+    --dark-gray: #333333; /* Gris oscuro para texto */
+    --medium-gray: #666666; /* Gris medio */
+    --light-gray: #F5F5F5; /* Gris muy claro */
+    --white: #FFFFFF; /* Blanco puro */
+    
+    /* Colores funcionales minimalistas */
+    --success-color: #00CC33; /* Verde éxito más sutil */
+    --info-color: #0066CC; /* Azul info minimalista */
+    --warning-color: #FF8800; /* Naranja advertencia */
+    --danger-color: #CC0000; /* Rojo peligro */
+    
+    /* Variables de uso general */
+    --primary-teal: var(--primary-green);
+    --secondary-teal: var(--secondary-green);
+    --dark-teal: var(--dark-green);
+    --light-teal: var(--light-green);
+    --accent-teal: var(--accent-green);
+    --success-teal: var(--success-color);
+    --info-teal: var(--info-color);
+    --warning-teal: var(--warning-color);
+    --danger-teal: var(--danger-color);
+    --text-dark: #1A1A1A; /* Texto oscuro minimalista */
+    --text-light: var(--white);
+    --background-light: var(--white);
+    --background-dark: var(--dark-black);
+    --card-bg: var(--white);
+    --border-color: #E5E5E5; /* Borde gris claro minimalista */
+    --shadow-color: rgba(0, 0, 0, 0.08); /* Sombra sutil */
+}
+
+/* Overrides de tema por categoría - Manteniendo paleta verde/negro del logo */
+.theme-smartphones {
+    /* Variación verde vibrante para smartphones */
+    --primary-teal: #00FF41;
+    --secondary-teal: #00CC33;
+    --dark-teal: #009922;
+    --light-teal: #E8F5E9;
+    --accent-teal: #39FF14;
+    --shadow-color: rgba(0, 255, 65, 0.2);
+}
+
+.theme-laptops {
+    /* Variación verde oscuro para laptops */
+    --primary-teal: #00CC33;
+    --secondary-teal: #00FF41;
+    --dark-teal: #006622;
+    --light-teal: #E8F5E9;
+    --accent-teal: #39FF14;
+    --shadow-color: rgba(0, 204, 51, 0.2);
+}
+
+.theme-tablets {
+    /* Variación verde medio para tablets */
+    --primary-teal: #00FF41;
+    --secondary-teal: #39FF14;
+    --dark-teal: #009922;
+    --light-teal: #E8F5E9;
+    --accent-teal: #00CC33;
+    --shadow-color: rgba(0, 255, 65, 0.2);
+}
+
+.theme-accesorios {
+    /* Variación verde brillante para accesorios */
+    --primary-teal: #39FF14;
+    --secondary-teal: #00FF41;
+    --dark-teal: #00CC33;
+    --light-teal: #E8F5E9;
+    --accent-teal: #00FF41;
+    --shadow-color: rgba(57, 255, 20, 0.2);
+}
+
+.theme-servicios-de-mantenimiento, .theme-servicios, .theme-servicios-mantenimiento {
+    /* Variación verde minimalista para servicios */
+    --primary-teal: var(--primary-green);
+    --secondary-teal: var(--secondary-green);
+    --dark-teal: var(--dark-green);
+    --light-teal: var(--light-green);
+    --accent-teal: var(--primary-green);
+    --shadow-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Estilos generales minimalistas */
+body {
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    font-weight: 400;
+    background: var(--white);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Tipografía elegante y legible */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--dark-teal);
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 2rem;
+    color: var(--primary-teal);
+}
+
+h3 {
+    font-size: 1.5rem;
+    color: var(--secondary-teal);
+}
+
+p, span, div {
+    font-weight: 500;
+    color: #2C2C2C;
+    font-size: 1rem;
+}
+
+/* Mejorar visibilidad de textos en diferentes contextos */
+.text-muted {
+    color: #666666 !important;
+    font-weight: 600;
+}
+
+.text-dark {
+    color: #1A1A1A !important;
+    font-weight: 600;
+}
+
+.lead {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-teal);
+}
+
+/* Sidebar izquierdo minimalista */
+.sidebar-left {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background: var(--dark-black) !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(0, 255, 65, 0.2);
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-content {
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sidebar-brand {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-light) !important;
+    padding: 1.5rem 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 3px solid var(--primary-green);
+    box-shadow: 0 2px 10px rgba(0, 255, 65, 0.3);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    background: rgba(0, 255, 65, 0.05);
+}
+
+.sidebar-brand:hover {
+    color: var(--text-light) !important;
+    transform: translateX(5px);
+}
+
+.sidebar-brand .logo-img {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+    min-height: 150px;
+    max-height: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0, 255, 65, 0.5)) brightness(1.15) contrast(1.1);
+    transition: all 0.3s ease;
+}
+
+.sidebar-brand:hover .logo-img {
+    filter: drop-shadow(0 6px 12px rgba(0, 255, 65, 0.7)) brightness(1.25) contrast(1.15);
+    transform: scale(1.05);
+}
+
+.brand-text {
+    white-space: nowrap;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 255, 65, 0.6);
+    color: var(--text-light) !important;
+}
+
+.sidebar-search {
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+}
+
+.sidebar-search .input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sidebar-search .form-control {
+    flex: 1;
+    border-radius: 8px;
+    border: 2px solid rgba(0, 255, 65, 0.4);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--primary-green);
+    font-size: 1rem;
+    font-weight: 600;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.6);
+}
+
+.sidebar-search .form-control::placeholder {
+    color: rgba(0, 255, 65, 0.6);
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+}
+
+.sidebar-search .form-control:focus {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 255, 65, 0.3), 0 0 15px rgba(0, 255, 65, 0.4);
+    text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
+}
+
+.sidebar-search .btn {
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+.sidebar-nav .nav-item {
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-nav .nav-link {
+    color: var(--white) !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    position: relative;
+    letter-spacing: 0.2px;
+    background: transparent;
+    border-left: 2px solid transparent;
+}
+
+.sidebar-nav .nav-link i {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+    color: var(--white) !important;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav .nav-link span {
+    flex: 1;
+    font-weight: 500;
+    color: var(--white) !important;
+}
+
+.sidebar-nav .nav-link:hover {
+    background: rgba(0, 255, 65, 0.1);
+    color: var(--primary-green) !important;
+    transform: translateX(3px);
+    border-left-color: var(--primary-green);
+}
+
+.sidebar-nav .nav-link:hover span {
+    color: var(--primary-green) !important;
+}
+
+.sidebar-nav .nav-link.active {
+    background: rgba(0, 255, 65, 0.15);
+    border-left: 2px solid var(--primary-green);
+    color: var(--primary-green) !important;
+}
+
+.sidebar-nav .nav-link.active span {
+    color: var(--primary-green) !important;
+}
+
+.sidebar-nav .nav-divider {
+    margin: 1rem 0;
+    padding: 0;
+}
+
+.sidebar-nav .nav-divider hr {
+    margin: 0;
+    border-color: rgba(0, 255, 65, 0.4);
+    border-width: 1px;
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+}
+
+.sidebar-dropdown {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+    padding: 0.5rem 0;
+    position: static !important;
+    transform: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-dropdown .dropdown-item {
+    color: var(--primary-green) !important;
+    padding: 0.65rem 1.5rem;
+    transition: all 0.3s ease;
+    display: block;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-shadow: 0 0 6px rgba(0, 255, 65, 0.8), 0 0 12px rgba(0, 255, 65, 0.5), 1px 1px 2px rgba(0, 0, 0, 0.9);
+    background: rgba(0, 255, 65, 0.05);
+}
+
+.sidebar-dropdown .dropdown-item:hover {
+    background: rgba(0, 255, 65, 0.25);
+    color: var(--primary-green) !important;
+    transform: translateX(5px);
+    text-shadow: 0 0 12px rgba(0, 255, 65, 1), 0 0 20px rgba(0, 255, 65, 0.7), 2px 2px 4px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 255, 65, 0.4);
+}
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar-left::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-left::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-left::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar-left::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-badge {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+}
+
+/* Botón toggle para móviles */
+.sidebar-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: linear-gradient(135deg, var(--primary-black), var(--dark-black));
+    border: 2px solid var(--primary-green);
+    color: var(--primary-green);
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 255, 65, 0.3);
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar-toggle i {
+    font-size: 1.5rem;
+}
+
+/* Contenido principal con margen para el sidebar */
+.main-content {
+    margin-left: 280px;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+/* Overlay para móviles */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+/* Responsive - ocultar sidebar en móviles */
+@media (max-width: 991.98px) {
+    .sidebar-left {
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+    
+    .sidebar-left.show {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px var(--shadow-color);
+        z-index: 1050;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding-top: 1rem;
+    }
+    
+    .sidebar-toggle {
+        display: block !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .sidebar-toggle {
+        display: none !important;
+    }
+    
+    .sidebar-left {
+        transform: translateX(0) !important;
+    }
+}
+
+/* Botones elegantes con efectos modernos */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal)) !important;
+    border: none !important;
+    color: var(--text-light) !important;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--dark-teal), var(--primary-teal)) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px var(--shadow-color);
+}
+
+.btn-outline-primary {
+    color: var(--primary-teal) !important;
+    border: 2px solid var(--primary-teal) !important;
+    font-weight: 600;
+    background-color: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal)) !important;
+    border-color: var(--accent-teal) !important;
+    color: var(--text-light) !important;
+    transform: translateY(-2px);
+}
+
+.btn-light {
+    background: linear-gradient(135deg, var(--text-light), var(--light-teal));
+    border: 2px solid var(--border-color);
+    color: var(--text-dark);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+    background: linear-gradient(135deg, var(--light-teal), var(--accent-teal));
+    border-color: var(--primary-teal);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(32, 178, 170, 0.3);
+}
+
+/* Enlaces elegantes */
+a {
+    color: var(--primary-teal);
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: var(--dark-teal);
+    text-decoration: underline;
+}
+
+/* Cards elegantes con efectos glassmorphism */
+.product-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px var(--shadow-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.product-card .card-body {
+    background: rgba(255, 255, 255, 1);
+}
+
+.product-card .card-body * {
+    color: #1A1A1A !important;
+}
+
+.product-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px var(--shadow-color);
+    border-color: var(--primary-teal);
+    background: rgba(255, 255, 255, 1);
+}
+
+.card-title {
+    color: var(--dark-teal);
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.card-text {
+    font-weight: 500;
+    color: #333333;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Categorías elegantes */
+.category-card {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    border: 2px solid var(--accent-teal);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.2);
+}
+
+.category-card:hover {
+    transform: scale(1.03);
+    color: var(--text-light);
+    text-decoration: none;
+    box-shadow: 0 8px 25px rgba(32, 178, 170, 0.3);
+}
+
+.category-card .card-title {
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 65, 0.3);
+}
+
+.category-card .card-text {
+    color: var(--text-light);
+    font-weight: 500;
+    font-size: 1rem;
+    opacity: 1;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Servicios de mantenimiento minimalistas */
+.service-card {
+    background: var(--white);
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary-green);
+}
+
+.service-card .card-title {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.15rem;
+}
+
+.service-card .card-text {
+    color: var(--medium-gray);
+    font-weight: 400;
+    font-size: 0.95rem;
+    opacity: 1;
+}
+
+/* Footer elegante con efectos modernos */
+footer {
+    background: var(--dark-black) !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(0, 255, 65, 0.2);
+    margin-left: 280px;
+    transition: margin-left 0.3s ease;
+    padding: 2.5rem 0 !important;
+}
+
+footer hr {
+    border-color: rgba(0, 255, 65, 0.4);
+    border-width: 1px;
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+    margin: 2rem 0;
+}
+
+@media (max-width: 991.98px) {
+    footer {
+        margin-left: 0;
+    }
+}
+
+footer h5 {
+    color: var(--white) !important;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    letter-spacing: 0.2px;
+}
+
+.footer-logo {
+    max-width: 200px;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 255, 65, 0.3));
+    transition: all 0.3s ease;
+}
+
+.footer-logo:hover {
+    filter: drop-shadow(0 4px 8px rgba(0, 255, 65, 0.5));
+    transform: scale(1.05);
+}
+
+footer p, footer li {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 400;
+    font-size: 0.9rem;
+    opacity: 1;
+    letter-spacing: 0.1px;
+}
+
+footer li {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+footer li i {
+    color: var(--primary-green) !important;
+    font-size: 1rem;
+    opacity: 0.9;
+    min-width: 18px;
+}
+
+footer a {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 400;
+    font-size: 0.9rem;
+    opacity: 1;
+    transition: all 0.2s ease;
+}
+
+footer a:hover {
+    color: var(--primary-green) !important;
+    text-decoration: none;
+    opacity: 1;
+}
+
+/* Badges y elementos de estado elegantes */
+.badge.bg-danger {
+    background: linear-gradient(135deg, var(--danger-teal), #b91c1c) !important;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+.badge.bg-success {
+    background: linear-gradient(135deg, var(--success-teal), var(--primary-teal)) !important;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* Precios elegantes */
+.price-badge {
+    background: linear-gradient(135deg, var(--primary-teal), var(--dark-teal));
+    color: var(--text-light);
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 20px;
+    border: 2px solid var(--accent-teal);
+    box-shadow: 0 3px 10px rgba(32, 178, 170, 0.3);
+    display: inline-block;
+}
+
+/* Formularios elegantes */
+.form-control {
+    border: 2px solid var(--border-color);
+    font-weight: 500;
+    font-size: 1rem;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    background-color: var(--card-bg);
+}
+
+.form-control:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 0 0.2rem rgba(32, 178, 170, 0.25);
+    transform: scale(1.01);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #1A1A1A;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Alertas elegantes */
+.alert-success {
+    background: linear-gradient(135deg, var(--light-teal), var(--accent-teal));
+    border: 2px solid var(--success-teal);
+    color: #1A1A1A;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, var(--warning-teal), #fbbf24);
+    border: 2px solid #d97706;
+    color: #1A1A1A;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, var(--danger-teal), #dc2626);
+    border: 2px solid #b91c1c;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Servicios de mantenimiento específicos - minimalista */
+.maintenance-section {
+    background: var(--white);
+    padding: 3rem 0;
+    margin: 2rem 0;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.service-icon {
+    font-size: 3rem;
+    color: var(--primary-green);
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+/* Listas elegantes */
+.list-unstyled li {
+    font-weight: 600;
+    color: #2C2C2C;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    padding: 0.25rem 0;
+}
+
+.list-unstyled li i {
+    color: var(--primary-green);
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.6));
+}
+
+/* Texto importante */
+.important-text {
+    color: var(--primary-teal);
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Dropdown elegante */
+.dropdown-menu {
+    background: linear-gradient(135deg, var(--card-bg), var(--light-teal));
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(32, 178, 170, 0.2);
+    padding: 0.5rem 0;
+}
+
+.dropdown-item {
+    color: var(--text-dark);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    transform: translateX(5px);
+}
+
+/* Responsive elegante */
+@media (max-width: 768px) {
+    .service-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .price-badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Efectos sutiles */
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
+    color: var(--text-light);
+    border-bottom: 2px solid var(--accent-teal);
+    font-weight: 600;
+}
+
+/* Botones de acción */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Ajustes para el body con sidebar */
+body {
+    padding-top: 0;
+}
+
+/* Iconos con colores aleatorios y visibles */
+.bi {
+    transition: all 0.3s ease;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+/* Asegurar que los iconos sean visibles y tengan buen contraste */
+.bi:not(.text-muted):not(.text-light):not(.text-white) {
+    font-weight: 600;
+    opacity: 1 !important;
+}
+
+/* Iconos en navbar - mantener visibilidad */
+.navbar-nav .nav-link .bi,
+.navbar-brand .bi {
+    font-size: 1.1em;
+    opacity: 1 !important;
+}
+
+/* Iconos de servicio - hacer más visibles */
+.service-icon .bi {
+    font-size: 3.5rem !important;
+    opacity: 1 !important;
+    display: inline-block;
+}
+
+/* Iconos en listas - hacer más visibles */
+.list-unstyled .bi {
+    font-size: 1.2em;
+    margin-right: 0.75rem;
+    opacity: 1 !important;
+    display: inline-block;
+}
+
+/* Iconos en botones - hacer más visibles */
+.btn .bi {
+    font-size: 1.1em;
+    opacity: 1 !important;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Iconos en cards - hacer más visibles */
+.card .bi {
+    opacity: 1 !important;
+}
+
+/* Iconos pequeños - asegurar tamaño mínimo */
+.bi[class*="bi-"] {
+    min-width: 1em;
+    min-height: 1em;
+    opacity: 1 !important;
+}
+
+/* Bot de Ayuda Inteligente */
+.help-bot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1050;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+.help-bot-window {
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    width: 420px;
+    max-width: calc(100vw - 40px);
+    height: 600px;
+    max-height: calc(100vh - 100px);
+    background: var(--dark-black);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.help-bot-window.active {
+    display: flex;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.help-bot-header {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-bot-avatar {
+    width: 45px;
+    height: 45px;
+    background: var(--primary-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--primary-black);
+    box-shadow: 0 4px 12px rgba(0, 255, 65, 0.3);
+}
+
+.help-bot-header h6 {
+    color: var(--white) !important;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.help-bot-header small {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 0.85rem;
+}
+
+.help-bot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.help-bot-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.help-bot-messages::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.help-bot-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.bot-message,
+.user-message {
+    display: flex;
+    gap: 0.75rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bot-message .message-avatar {
+    background: var(--primary-green);
+    color: var(--primary-black);
+}
+
+.user-message .message-avatar {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.message-content {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    color: var(--white) !important;
+    font-weight: 400;
+    font-size: 0.95rem;
+}
+
+.user-message .message-content {
+    background: rgba(0, 255, 65, 0.15);
+    text-align: right;
+    color: var(--white) !important;
+}
+
+.message-content p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: var(--white) !important;
+    font-weight: 400;
+}
+
+.message-content p:first-child {
+    margin-top: 0;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+.message-content ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-content li {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--white) !important;
+    font-weight: 400;
+}
+
+.message-content strong {
+    color: var(--white) !important;
+    font-weight: 600;
+}
+
+.quick-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.quick-btn {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: var(--white) !important;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.quick-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.product-card-bot {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.product-card-bot:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(5px);
+}
+
+.product-card-bot h6 {
+    color: var(--white) !important;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.product-card-bot p {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+    font-weight: 400;
+}
+
+.product-card-bot .price {
+    color: var(--primary-green);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.product-card-bot a {
+    color: var(--primary-green) !important;
+    text-decoration: underline;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.help-bot-input {
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.help-bot-input .form-control {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--white) !important;
+    border-radius: 12px;
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+.help-bot-input .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.help-bot-input .form-control:focus {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: var(--primary-green);
+    color: var(--white) !important;
+    box-shadow: 0 0 0 2px rgba(0, 255, 65, 0.2);
+}
+
+.help-bot-input .btn {
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    min-width: 50px;
+}
+
+.help-bot-toggle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--dark-black);
+    border: 2px solid var(--primary-green);
+    color: var(--primary-green);
+    font-size: 1.6rem;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.help-bot-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.help-bot-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 1.2rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Responsive para el bot */
+@media (max-width: 576px) {
+    .help-bot-window {
+        width: calc(100vw - 20px);
+        right: 10px;
+        bottom: 80px;
+        height: calc(100vh - 120px);
+    }
+    
+    .help-bot-container {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .help-bot-toggle {
+        width: 55px;
+        height: 55px;
+        font-size: 1.5rem;
+    }
+}
+
+/* Responsive para el logo */
+@media (max-width: 991.98px) {
+    .sidebar-brand {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+    
+    .sidebar-brand .logo-img {
+        min-height: 120px;
+        max-height: 140px;
+    }
+    
+    .brand-text {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .footer-logo {
+        max-width: 150px;
+        max-height: 60px;
+    }
+}

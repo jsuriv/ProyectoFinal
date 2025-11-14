@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script>
+// Función global para actualizar el estado
+window.actualizarEstado = function(pedidoId, nuevoEstado) {
+    console.log('Actualizando estado:', pedidoId, nuevoEstado);
+    
+    const formData = new FormData();
+    formData.append('estado', nuevoEstado);
+    
+    fetch(`/admin/pedido/estado/${pedidoId}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error al actualizar el estado del pedido');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado del pedido');
+    });
+};
+</script>
+{% endblock %}
+
+{% block title %}Gestionar Pedidos - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Gestionar Pedidos</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <form method="GET" class="mb-4">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="estado" class="form-label">Estado</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="">Todos</option>
+                                    <option value="pendiente" {% if estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                                    <option value="en_proceso" {% if estado == 'en_proceso' %}selected{% endif %}>En Proceso</option>
+                                    <option value="entregado" {% if estado == 'entregado' %}selected{% endif %}>Entregado</option>
+                                    <option value="cancelado" {% if estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="fecha_desde" class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                                       value="{{ fecha_desde }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" 
+                                       value="{{ fecha_hasta }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="cliente" class="form-label">Cliente</label>
+                                <input type="text" class="form-control" id="cliente" name="cliente" 
+                                       value="{{ cliente }}" placeholder="Nombre del cliente">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search"></i> Filtrar
+                                </button>
+                                <a href="{{ url_for('admin_pedidos') }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Limpiar Filtros
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Tabla de Pedidos -->
+                    {% if pedidos.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>N° Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in pedidos.items %}
+                                <tr>
+                                    <td>{{ pedido.numero_factura }}</td>
+                                    <td>{{ pedido.usuario.nombre }}</td>
+                                    <td>{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>Bs. {{ "%.2f"|format(pedido.total) }}</td>
+                                    <td>
+                                        <span class="badge {% if pedido.estado == 'entregado' %}bg-success
+                                                         {% elif pedido.estado == 'cancelado' %}bg-danger
+                                                         {% elif pedido.estado == 'pendiente' %}bg-warning
+                                                         {% else %}bg-info{% endif %}">
+                                            {{ pedido.estado|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('ver_pedido_admin', id=pedido.id_pedido) }}" 
+                                               class="btn btn-sm btn-info" title="Ver Detalles" aria-label="Ver Detalles">
+                                                <i class="bi bi-eye"></i>
+                                                <span class="visually-hidden">Ver Detalles</span>
+                                            </a>
+                                            {% if pedido.estado == 'pendiente' %}
+                                            <button type="button" class="btn btn-sm btn-success"
+                                                    onclick="actualizarEstado('{{ pedido.id_pedido }}', 'en_proceso')"
+                                                    title="Marcar como En Proceso"
+                                                    aria-label="Marcar como En Proceso">
+                                                <i class="bi bi-play-fill"></i>
+                                                <span class="visually-hidden">Marcar como En Proceso</span>
+                                            </button>
+                                            {% endif %}
+                                            {% if pedido.estado == 'en_proceso' %}
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                    onclick="actualizarEstado('{{ pedido.id_pedido }}', 'entregado')"
+                                                    title="Marcar como Entregado"
+                                                    aria-label="Marcar como Entregado">
+                                                <i class="bi bi-check-lg"></i>
+                                                <span class="visually-hidden">Marcar como Entregado</span>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    <nav aria-label="Navegación de páginas" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if pedidos.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_pedidos', page=pedidos.prev_num, 
+                                    estado=estado, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta, cliente=cliente) }}">
+                                    Anterior
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in pedidos.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                                {% if page_num %}
+                                    {% if page_num == pedidos.page %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin_pedidos', page=page_num, 
+                                            estado=estado, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta, cliente=cliente) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if pedidos.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin_pedidos', page=pedidos.next_num, 
+                                    estado=estado, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta, cliente=cliente) }}">
+                                    Siguiente
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% else %}
+                    <div class="alert alert-info">
+                        No se encontraron pedidos con los filtros seleccionados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %} 

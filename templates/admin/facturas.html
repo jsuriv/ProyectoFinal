@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+
+{% block title %}Facturas - Sistema de Ventas de Electrónicos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">Gestión de Facturas</h4>
+        </div>
+        <div class="card-body">
+            <!-- Filtros -->
+            <form method="GET" class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label for="fecha_desde" class="form-label">Fecha Desde</label>
+                    <input type="date" class="form-control" id="fecha_desde" name="fecha_desde" 
+                           value="{{ request.args.get('fecha_desde', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha_hasta" class="form-label">Fecha Hasta</label>
+                    <input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta"
+                           value="{{ request.args.get('fecha_hasta', '') }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select class="form-select" id="estado" name="estado">
+                        <option value="">Todos</option>
+                        <option value="emitida" {% if request.args.get('estado') == 'emitida' %}selected{% endif %}>Emitida</option>
+                        <option value="anulada" {% if request.args.get('estado') == 'anulada' %}selected{% endif %}>Anulada</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="cliente" class="form-label">Cliente</label>
+                    <input type="text" class="form-control" id="cliente" name="cliente" 
+                           placeholder="Nombre o NIT" value="{{ request.args.get('cliente', '') }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Tabla de Facturas -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>N° Factura</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for factura in facturas %}
+                        <tr>
+                            <td>{{ factura.numero_factura }}</td>
+                            <td>{{ factura.fecha_emision.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ factura.pedido.usuario.nombre }}</td>
+                            <td>Bs. {{ "%.2f"|format(factura.total) }}</td>
+                            <td>
+                                <span class="badge {% if factura.estado == 'emitida' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ factura.estado|title }}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-info btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#verFacturaModal"
+                                        data-factura-id="{{ factura.id_factura }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{{ url_for('descargar_factura', id_factura=factura.id_factura) }}" 
+                                   class="btn btn-success btn-sm">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% if factura.estado == 'emitida' %}
+                                <button type="button" class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#anularModal"
+                                        data-factura-id="{{ factura.id_factura }}"
+                                        data-factura-numero="{{ factura.numero_factura }}">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Navegación de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if pagination.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_facturas', page=pagination.prev_num, **request.args) }}">
+                            Anterior
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for page in pagination.iter_pages() %}
+                        {% if page %}
+                            <li class="page-item {% if page == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin_facturas', page=page, **request.args) }}">
+                                    {{ page }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if pagination.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_facturas', page=pagination.next_num, **request.args) }}">
+                            Siguiente
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ver Factura -->
+<div class="modal fade" id="verFacturaModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Factura <span id="facturaNumero"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Información de la Empresa -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Datos de la Empresa</h5>
+                                <p class="mb-1"><strong>Sistema de Ventas de Electrónicos</strong></p>
+                                <p class="mb-1">NIT: 1234567890</p>
+                                <p class="mb-1">Dirección: Av. Principal #123</p>
+                                <p class="mb-1">Teléfono: (591) 123-4567</p>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <h5>Datos de la Factura</h5>
+                                <p class="mb-1"><strong>Fecha de Emisión:</strong> <span id="facturaFecha"></span></p>
+                                <p class="mb-1"><strong>Estado:</strong> <span id="facturaEstado"></span></p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Información del Cliente -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5>Datos del Cliente</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Nombre:</strong> <span id="clienteNombre"></span></p>
+                                        <p class="mb-1"><strong>NIT:</strong> <span id="clienteNit"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Dirección:</strong> <span id="clienteDireccion"></span></p>
+                                        <p class="mb-1"><strong>Teléfono:</strong> <span id="clienteTelefono"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productos -->
+                        <h5>Productos</h5>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Precio Unit.</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productosTabla">
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td class="text-end" id="facturaSubtotal"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>IVA (13%):</strong></td>
+                                        <td class="text-end" id="facturaIva"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td class="text-end"><strong id="facturaTotal"></strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Historial de Estados -->
+                        <h5 class="mt-4">Historial de Estados</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Usuario</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historialEstados">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Acciones</h5>
+                            </div>
+                            <div class="card-body">
+                                <a href="#" id="btnDescargarFactura" class="btn btn-success w-100 mb-2">
+                                    <i class="bi bi-download"></i> Descargar PDF
+                                </a>
+                                <a href="#" id="btnVerPedido" class="btn btn-info w-100">
+                                    <i class="bi bi-box"></i> Ver Pedido
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Anular Factura -->
+<div class="modal fade" id="anularModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Anular Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formAnularFactura" method="POST">
+                <div class="modal-body">
+                    <p>¿Está seguro que desea anular la factura <span id="anularFacturaNumero"></span>?</p>
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label">Motivo de Anulación</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Anular Factura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para cargar los detalles de la factura
+    function cargarFactura(idFactura) {
+        fetch(`/api/facturas/${idFactura}`)
+            .then(response => response.json())
+            .then(data => {
+                // Actualizar información básica
+                document.getElementById('facturaNumero').textContent = data.numero_factura;
+                document.getElementById('facturaFecha').textContent = new Date(data.fecha_emision).toLocaleString();
+                document.getElementById('facturaEstado').textContent = data.estado.charAt(0).toUpperCase() + data.estado.slice(1);
+                
+                // Actualizar información del cliente
+                document.getElementById('clienteNombre').textContent = data.pedido.usuario.nombre;
+                document.getElementById('clienteNit').textContent = data.pedido.usuario.nit || 'No especificado';
+                document.getElementById('clienteDireccion').textContent = data.pedido.direccion_envio;
+                document.getElementById('clienteTelefono').textContent = data.pedido.telefono;
+                
+                // Actualizar productos
+                const productosTabla = document.getElementById('productosTabla');
+                productosTabla.innerHTML = '';
+                data.pedido.detalles.forEach(detalle => {
+                    productosTabla.innerHTML += `
+                        <tr>
+                            <td>${detalle.producto.nombre}</td>
+                            <td class="text-center">${detalle.cantidad}</td>
+                            <td class="text-end">Bs. ${detalle.precio_unitario.toFixed(2)}</td>
+                            <td class="text-end">Bs. ${detalle.subtotal.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                
+                // Actualizar totales
+                document.getElementById('facturaSubtotal').textContent = `Bs. ${data.subtotal.toFixed(2)}`;
+                document.getElementById('facturaIva').textContent = `Bs. ${data.iva.toFixed(2)}`;
+                document.getElementById('facturaTotal').textContent = `Bs. ${data.total.toFixed(2)}`;
+                
+                // Actualizar historial de estados
+                const historialEstados = document.getElementById('historialEstados');
+                historialEstados.innerHTML = '';
+                data.estados.forEach(estado => {
+                    historialEstados.innerHTML += `
+                        <tr>
+                            <td>${new Date(estado.fecha_cambio).toLocaleString()}</td>
+                            <td>
+                                <span class="badge ${estado.estado === 'emitida' ? 'bg-success' : 
+                                                    estado.estado === 'anulada' ? 'bg-danger' : 
+                                                    estado.estado === 'reimpresa' ? 'bg-info' : 'bg-warning'}">
+                                    ${estado.estado.charAt(0).toUpperCase() + estado.estado.slice(1)}
+                                </span>
+                            </td>
+                            <td>${estado.admin ? estado.admin.nombre : 'Sistema'}</td>
+                            <td>${estado.observacion || ''}</td>
+                        </tr>
+                    `;
+                });
+
+                // Actualizar enlaces
+                document.getElementById('btnDescargarFactura').href = `/factura/descargar/${idFactura}`;
+                document.getElementById('btnVerPedido').href = `/admin/pedido/${data.pedido.id_pedido}`;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Evento para abrir el modal de ver factura
+    const verFacturaModal = document.getElementById('verFacturaModal');
+    verFacturaModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const idFactura = button.getAttribute('data-factura-id');
+        cargarFactura(idFactura);
+    });
+
+    // Evento para abrir el modal de anular factura
+    const anularModal = document.getElementById('anularModal');
+    anularModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const idFactura = button.getAttribute('data-factura-id');
+        const numeroFactura = button.getAttribute('data-factura-numero');
+        
+        document.getElementById('anularFacturaNumero').textContent = numeroFactura;
+        document.getElementById('formAnularFactura').action = `/admin/facturas/${idFactura}/anular`;
+    });
+});
+</script>
+{% endblock %} 
