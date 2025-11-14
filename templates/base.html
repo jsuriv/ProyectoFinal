@@ -516,8 +516,11 @@
 
             // Botones rápidos - usar delegación de eventos para que funcione con botones dinámicos
             botMessages.addEventListener('click', (e) => {
-                if (e.target.classList.contains('quick-btn') || e.target.closest('.quick-btn')) {
-                    const btn = e.target.classList.contains('quick-btn') ? e.target : e.target.closest('.quick-btn');
+                // Verificar si el clic fue en un botón rápido o en un elemento dentro de él
+                const btn = e.target.closest('.quick-btn');
+                if (btn) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const action = btn.getAttribute('data-action');
                     let message = '';
 
@@ -534,6 +537,8 @@
                         case 'categorias':
                             message = 'categorías';
                             break;
+                        default:
+                            return; // Si no hay acción, no hacer nada
                     }
 
                     if (message) {
@@ -705,9 +710,12 @@
 
             // Detectar categoría actual desde el servidor
             var serverCatSlug = null;
+            /* eslint-disable */
             {% if categoria_actual %}
-                serverCatSlug = '{{ categoria_actual.nombre|lower|replace(' ', '-') }}';
+            {% set cat_slug = categoria_actual.nombre|lower|replace(' ', '-') %}
+            serverCatSlug = "{{ cat_slug }}";
             {% endif %}
+            /* eslint-enable */
 
             var savedSw = localStorage.getItem('ew_theme_sw');
             var themeToApply = null;
