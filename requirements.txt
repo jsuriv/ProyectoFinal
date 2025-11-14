@@ -18,7 +18,6 @@ blinker==1.7.0
 email-validator==2.1.0.post1
 cryptography==42.0.2
 pyOpenSSL==24.0.0
-<<<<<<< HEAD
 certifi==2024.2.2
 
 # Librerías para mejorar el bot con IA (opcionales)
@@ -34,6 +33,3 @@ nltk==3.8.1
 spacy==3.7.2
 # Dependencias adicionales para NLTK y spaCy
 numpy==1.26.4
-=======
-certifi==2024.2.2
->>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
