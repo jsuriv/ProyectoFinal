@@ -260,39 +260,26 @@ def agregar_servicio_carrito():
         precio_servicio = float(request.form.get('precio_servicio'))
         tipo = request.form.get('tipo')
         
-        # Crear un producto temporal para el servicio
-        servicio_producto = {
-            'id_producto': f'servicio_{id_servicio}',
-            'nombre': nombre_servicio,
-            'precio': precio_servicio,
-            'tipo': tipo,
-            'descripcion': f'Servicio de mantenimiento: {nombre_servicio}',
-            'imagen': None
-        }
-        
-        # Agregar al carrito (usando la funcionalidad existente)
-        item_carrito = Carrito(
-            id_usuario=current_user.id_usuario,
-            id_producto=id_servicio,  # Usar el ID del servicio
-            cantidad=1
-        )
-        
-        # Guardar información adicional del servicio en la sesión
+        # Verificar si el servicio ya está en el carrito
         if 'servicios_carrito' not in session:
             session['servicios_carrito'] = {}
         
+        # Verificar si el servicio ya existe en el carrito
+        if str(id_servicio) in session['servicios_carrito']:
+            flash(f'El servicio "{nombre_servicio}" ya está en tu carrito', 'info')
+            return redirect(url_for('servicios_mantenimiento'))
+        
+        # Guardar servicio solo en la sesión (NO en la tabla Carrito)
         session['servicios_carrito'][str(id_servicio)] = {
+            'id_servicio': id_servicio,
             'nombre': nombre_servicio,
             'precio': precio_servicio,
             'tipo': tipo
         }
-        
-        db.session.add(item_carrito)
-        db.session.commit()
+        session.modified = True
         
         flash(f'Servicio "{nombre_servicio}" agregado al carrito exitosamente', 'success')
     except Exception as e:
-        db.session.rollback()
         flash('Error al agregar el servicio al carrito', 'error')
         print(f"Error: {str(e)}")
     
@@ -302,10 +289,10 @@ def agregar_servicio_carrito():
 @login_required
 def eliminar_servicio_carrito(id_servicio):
     try:
-        # Eliminar servicio de la sesión
-        if 'servicios_carrito' in session and id_servicio in session['servicios_carrito']:
-            servicio_nombre = session['servicios_carrito'][id_servicio]['nombre']
-            del session['servicios_carrito'][id_servicio]
+        # Eliminar servicio de la sesión (NO de la tabla Carrito)
+        if 'servicios_carrito' in session and str(id_servicio) in session['servicios_carrito']:
+            servicio_nombre = session['servicios_carrito'][str(id_servicio)]['nombre']
+            del session['servicios_carrito'][str(id_servicio)]
             session.modified = True
             flash(f'Servicio "{servicio_nombre}" eliminado del carrito', 'success')
         else:
@@ -382,13 +369,54 @@ def agregar_al_carrito():
 @login_required
 def carrito():
     try:
+        # Obtener todos los items del carrito
         items_carrito = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
         
         # Obtener servicios del carrito desde la sesión
         servicios_carrito = session.get('servicios_carrito', {})
         
+        # Obtener IDs de servicios para filtrar productos que puedan ser servicios
+        ids_servicios = []
+        for sid in servicios_carrito.keys():
+            try:
+                ids_servicios.append(int(sid))
+            except:
+                pass
+        
+        # Filtrar items del carrito para excluir cualquier producto que coincida con un ID de servicio
+        # (esto previene que servicios antiguos se muestren como productos)
+        items_productos = []
+        items_a_eliminar = []
+        
+        for item in items_carrito:
+            # Verificar que el producto existe y no es un servicio
+            try:
+                producto = item.producto
+                # Si el producto existe y no es un servicio, incluirlo
+                if producto and item.id_producto not in ids_servicios:
+                    items_productos.append(item)
+                elif item.id_producto in ids_servicios:
+                    # Si es un servicio (coincide con ID de servicio), marcarlo para eliminar
+                    items_a_eliminar.append(item)
+            except Exception as e:
+                # Si el producto no existe (puede ser un servicio antiguo), marcarlo para eliminar
+                print(f"Producto no encontrado para item {item.id_carrito}: {str(e)}")
+                items_a_eliminar.append(item)
+        
+        # Eliminar items que son servicios o productos inexistentes
+        if items_a_eliminar:
+            for item in items_a_eliminar:
+                try:
+                    db.session.delete(item)
+                except:
+                    pass
+            try:
+                db.session.commit()
+            except:
+                db.session.rollback()
+        
         # Calcular total de productos
-        total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_carrito)
+        total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_productos)
         
         # Calcular total de servicios
         total_servicios = sum(Decimal(str(servicio['precio'])) for servicio in servicios_carrito.values())
@@ -397,7 +425,7 @@ def carrito():
         total = total_productos + total_servicios
         
         return render_template('carrito.html', 
-                             items=items_carrito, 
+                             items=items_productos, 
                              servicios=servicios_carrito,
                              total=total,
                              total_productos=total_productos,
