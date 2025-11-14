@@ -86,7 +86,11 @@
     --secondary-teal: var(--secondary-green);
     --dark-teal: var(--dark-green);
     --light-teal: var(--light-green);
+<<<<<<< HEAD
+    --accent-teal: var(--accent-green);
+=======
     --accent-teal: var(--primary-green);
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
     --shadow-color: rgba(0, 0, 0, 0.08);
 }
 
@@ -631,6 +635,16 @@ a:hover {
     color: var(--text-dark);
     border: 1px solid var(--border-color);
     transition: all 0.2s ease;
+<<<<<<< HEAD
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.service-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+=======
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -639,6 +653,7 @@ a:hover {
 .service-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
     border-color: var(--primary-green);
 }
 
@@ -824,21 +839,33 @@ footer a:hover {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+<<<<<<< HEAD
+/* Servicios de mantenimiento específicos */
+=======
 /* Servicios de mantenimiento específicos - minimalista */
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
 .maintenance-section {
     background: var(--white);
     padding: 3rem 0;
     margin: 2rem 0;
     border: 1px solid var(--border-color);
+<<<<<<< HEAD
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+=======
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
 }
 
 .service-icon {
     font-size: 3rem;
     color: var(--primary-green);
     margin-bottom: 1.5rem;
+<<<<<<< HEAD
+=======
     opacity: 0.9;
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
 }
 
 /* Listas elegantes */
@@ -922,10 +949,187 @@ footer a:hover {
 }
 
 .card-header {
+<<<<<<< HEAD
+    background: var(--white);
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+/* Estilos específicos para el carrito de compras */
+.carrito-container .card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+    margin-bottom: 1.5rem;
+}
+
+.carrito-container .card-header {
+    background: var(--white);
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+.carrito-container .card-header h5 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.carrito-container .card-header i {
+    color: var(--primary-green);
+    margin-right: 0.5rem;
+}
+
+.carrito-container .card-body {
+    padding: 1.5rem;
+    background: var(--white);
+}
+
+.carrito-container .card-body h5 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.carrito-container .card-body p {
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+}
+
+.carrito-container .text-muted {
+    color: var(--medium-gray) !important;
+}
+
+.carrito-container hr {
+    border-color: var(--border-color);
+    margin: 1rem 0;
+}
+
+/* Botones del carrito */
+.carrito-container .btn-danger {
+    background: #DC3545;
+    border-color: #DC3545;
+    color: var(--white);
+    font-weight: 500;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.carrito-container .btn-danger:hover {
+    background: #C82333;
+    border-color: #BD2130;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.carrito-container .btn-primary {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--dark-black);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.carrito-container .btn-primary:hover {
+    background: var(--secondary-green);
+    border-color: var(--secondary-green);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 255, 65, 0.3);
+    color: var(--dark-black);
+}
+
+.carrito-container .btn-outline-primary {
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.carrito-container .btn-outline-primary:hover {
+    background: var(--primary-green);
+    border-color: var(--primary-green);
+    color: var(--dark-black);
+    transform: translateY(-1px);
+}
+
+/* Inputs del carrito */
+.carrito-container .form-control {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+    color: var(--text-dark);
+    background: var(--white);
+}
+
+.carrito-container .form-control:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 0.2rem rgba(0, 255, 65, 0.15);
+    outline: none;
+}
+
+/* Resumen del pedido */
+.carrito-container .card .card-body .d-flex {
+    color: var(--text-dark);
+}
+
+.carrito-container .card .card-body strong {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Servicios en el carrito */
+.carrito-container .bg-primary {
+    background: var(--primary-green) !important;
+    color: var(--dark-black) !important;
+}
+
+/* Alertas del carrito */
+.carrito-container .alert-info {
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    color: var(--text-dark);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+
+.carrito-container .alert-info i {
+    color: var(--primary-green);
+}
+
+/* Carrito vacío */
+.carrito-container .text-center i {
+    color: var(--medium-gray);
+}
+
+.carrito-container .text-center h3 {
+    color: var(--text-dark);
+    font-weight: 600;
+}
+
+/* Precios destacados */
+.carrito-container .fw-bold {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1rem;
+=======
     background: linear-gradient(135deg, var(--primary-teal), var(--secondary-teal));
     color: var(--text-light);
     border-bottom: 2px solid var(--accent-teal);
     font-weight: 600;
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
 }
 
 /* Botones de acción */

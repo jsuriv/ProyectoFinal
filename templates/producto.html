@@ -7,7 +7,11 @@
     <div class="row">
         <div class="col-md-6">
             {% if producto.imagen %}
+<<<<<<< HEAD
+            <img src="{{ url_for('serve_image', filename=producto.imagen) }}" 
+=======
             <img src="{{ url_for('static', filename='images/productos/' + producto.imagen) }}" 
+>>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
                  class="img-fluid rounded" alt="{{ producto.nombre }}">
             {% else %}
             <div class="bg-light rounded p-5 text-center">
