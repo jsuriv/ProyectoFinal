@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ElectroWorld - Tu Tienda de Electrónicos y Servicios{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS (can be replaced dynamically with Bootswatch) -->
+    <link id="bootstrap-css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Custom CSS -->
@@ -27,126 +27,134 @@
     </style>
     {% block styles %}{% endblock %}
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <i class="bi bi-laptop"></i> ElectroWorld
+<body class="{% if categoria_actual %}theme-{{ categoria_actual.nombre|lower|replace(' ', '-') }}{% endif %}">
+    <!-- Sidebar izquierdo -->
+    <nav class="sidebar-left navbar-dark bg-primary" id="sidebarNav">
+        <div class="sidebar-content">
+            <a class="sidebar-brand" href="{{ url_for('index') }}">
+                <img src="{{ url_for('serve_image', filename='logo3.png') }}" alt="ElectroWorld" class="logo-img">
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Inicio</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Categorías
-                        </a>
-                        <ul class="dropdown-menu">
-                            {% for categoria in categorias %}
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('categoria', id=categoria.id_categoria) }}">
-                                    {{ categoria.nombre }}
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('servicios_mantenimiento') }}">
-                            <i class="bi bi-tools"></i> Servicios de Mantenimiento
-                        </a>
-                    </li>
-                </ul>
-                
-                <form class="d-flex me-3" action="{{ url_for('buscar_productos') }}" method="GET">
-                    <input class="form-control me-2" type="search" name="q" placeholder="Buscar productos..." 
+            
+            <!-- Búsqueda -->
+            <form class="sidebar-search" action="{{ url_for('buscar_productos') }}" method="GET">
+                <div class="input-group">
+                    <input class="form-control" type="search" name="q" placeholder="Buscar..." 
                            value="{{ request.args.get('q', '') }}">
                     <button class="btn btn-light" type="submit">
                         <i class="bi bi-search"></i>
                     </button>
-                </form>
+                </div>
+            </form>
+            
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="bi bi-house-door"></i> <span>Inicio</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="sidebarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-grid"></i> <span>Categorías</span>
+                    </a>
+                    <ul class="dropdown-menu sidebar-dropdown">
+                        {% for categoria in categorias %}
+                        <li>
+                            <a class="dropdown-item" data-theme="theme-{{ categoria.nombre|lower|replace(' ', '-') }}" data-theme-name="{{ categoria.nombre|lower|replace(' ', '-') }}" href="{{ url_for('categoria', id=categoria.id_categoria) }}">
+                                {{ categoria.nombre }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('servicios_mantenimiento') }}">
+                        <i class="bi bi-tools"></i> <span>Servicios</span>
+                    </a>
+                </li>
                 
-                <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
-                        {% if current_user.tipo_usuario == 'admin' %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
-                                <i class="bi bi-speedometer2"></i> Panel de Administración
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_pedidos') }}">
-                                <i class="bi bi-box"></i> Pedidos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_facturas') }}">
-                                <i class="bi bi-receipt"></i> Facturas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_productos') }}">
-                                <i class="bi bi-box-seam"></i> Productos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_usuarios') }}">
-                                <i class="bi bi-people"></i> Usuarios
-                            </a>
-                        </li>
-                        {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user_dashboard') }}">
-                                <i class="bi bi-person"></i> Mi Cuenta
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('mis_pedidos') }}">
-                                <i class="bi bi-box"></i> Mis Pedidos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('mis_facturas') }}">
-                                <i class="bi bi-receipt"></i> Mis Facturas
-                            </a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link position-relative" href="{{ url_for('carrito') }}">
-                                <i class="bi bi-cart3"></i> Carrito
-                                {% if carrito_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ carrito_count }}
-                                </span>
-                                {% endif %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">
-                                <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                            </a>
-                        </li>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.tipo_usuario == 'admin' %}
+                    <li class="nav-divider"><hr></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> <span>Panel Admin</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_pedidos') }}">
+                            <i class="bi bi-box"></i> <span>Pedidos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_facturas') }}">
+                            <i class="bi bi-receipt"></i> <span>Facturas</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_productos') }}">
+                            <i class="bi bi-box-seam"></i> <span>Productos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_usuarios') }}">
+                            <i class="bi bi-people"></i> <span>Usuarios</span>
+                        </a>
+                    </li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">
-                                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('registro') }}">
-                                <i class="bi bi-person-plus"></i> Registrarse
-                            </a>
-                        </li>
+                    <li class="nav-divider"><hr></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('user_dashboard') }}">
+                            <i class="bi bi-person"></i> <span>Mi Cuenta</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mis_pedidos') }}">
+                            <i class="bi bi-box"></i> <span>Mis Pedidos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mis_facturas') }}">
+                            <i class="bi bi-receipt"></i> <span>Mis Facturas</span>
+                        </a>
+                    </li>
                     {% endif %}
-                </ul>
-            </div>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{{ url_for('carrito') }}">
+                            <i class="bi bi-cart3"></i> <span>Carrito</span>
+                            {% if carrito_count > 0 %}
+                            <span class="badge rounded-pill bg-danger sidebar-badge">{{ carrito_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">
+                            <i class="bi bi-box-arrow-right"></i> <span>Cerrar Sesión</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="nav-divider"><hr></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">
+                            <i class="bi bi-box-arrow-in-right"></i> <span>Iniciar Sesión</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('registro') }}">
+                            <i class="bi bi-person-plus"></i> <span>Registrarse</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
         </div>
     </nav>
+    
+    <!-- Botón toggle para móviles -->
+    <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggleBtn">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Overlay para móviles -->
+    <div class="sidebar-overlay d-lg-none" id="sidebarOverlay"></div>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -161,16 +169,68 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main>
+    <main class="main-content">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Bot de Ayuda Inteligente -->
+    <div class="help-bot-container" id="helpBotContainer">
+        <div class="help-bot-window" id="helpBotWindow">
+            <div class="help-bot-header">
+                <div class="d-flex align-items-center">
+                    <div class="help-bot-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="ms-2">
+                        <h6 class="mb-0">Asistente de Productos</h6>
+                        <small class="text-muted">ElectroWorld</small>
+                    </div>
+                </div>
+                <button class="btn-close btn-close-white" id="closeBotBtn" aria-label="Cerrar"></button>
+            </div>
+            <div class="help-bot-messages" id="helpBotMessages">
+                <div class="bot-message">
+                    <div class="message-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>¡Hola! 👋 Soy tu asistente de productos de ElectroWorld.</p>
+                        <p>Puedo ayudarte a:</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                            <li>🔍 Buscar productos específicos</li>
+                            <li>💡 Recomendar productos según tus necesidades</li>
+                            <li>💰 Encontrar productos por precio</li>
+                            <li>📱 Comparar productos de diferentes categorías</li>
+                        </ul>
+                        <p><strong>¿Qué necesitas hoy?</strong></p>
+                        <div class="quick-options">
+                            <button class="quick-btn" data-action="buscar">🔍 Buscar Productos</button>
+                            <button class="quick-btn" data-action="recomendar">💡 Recomendaciones</button>
+                            <button class="quick-btn" data-action="precio">💰 Por Precio</button>
+                            <button class="quick-btn" data-action="categorias">📂 Categorías</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="help-bot-input">
+                <input type="text" id="helpBotInput" placeholder="Ej: Buscar laptop económico..." class="form-control">
+                <button class="btn btn-primary" id="sendBotBtn">
+                    <i class="bi bi-send"></i>
+                </button>
+            </div>
+        </div>
+        <button class="help-bot-toggle" id="helpBotToggle">
+            <i class="bi bi-chat-dots"></i>
+            <span class="help-bot-badge">💡</span>
+        </button>
+    </div>
 
     <!-- Footer -->
     <footer class="bg-dark text-light py-4 mt-5">
         <div class="container">
             <div class="row">
                 <div class="col-md-4">
-                    <h5>ElectroWorld</h5>
+                    <img src="{{ url_for('serve_image', filename='logo3.png') }}" alt="ElectroWorld" class="footer-logo mb-3">
                     <p>Tu tienda de confianza para productos electrónicos y servicios de mantenimiento.</p>
                 </div>
                 <div class="col-md-4">
@@ -200,5 +260,472 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
+    <!-- Script para manejar el sidebar en móviles -->
+    <script>
+    (function() {
+        // Manejar el toggle del sidebar en móviles
+        const sidebar = document.getElementById('sidebarNav');
+        const toggleBtn = document.getElementById('sidebarToggleBtn');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        function toggleSidebar() {
+            if (window.innerWidth < 992) {
+                sidebar.classList.toggle('show');
+                if (overlay) {
+                    overlay.classList.toggle('show');
+                }
+            }
+        }
+        
+        function closeSidebar() {
+            if (window.innerWidth < 992) {
+                sidebar.classList.remove('show');
+                if (overlay) {
+                    overlay.classList.remove('show');
+                }
+            }
+        }
+        
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleSidebar();
+            });
+        }
+        
+        if (overlay) {
+            overlay.addEventListener('click', closeSidebar);
+        }
+        
+        // Cerrar sidebar al hacer clic en un enlace en móviles
+        const sidebarLinks = document.querySelectorAll('.sidebar-nav .nav-link:not(.dropdown-toggle)');
+        sidebarLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 992) {
+                    setTimeout(closeSidebar, 300);
+                }
+            });
+        });
+        
+        // Cerrar sidebar al redimensionar la ventana
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 992) {
+                closeSidebar();
+            }
+        });
+    })();
+    </script>
+    <!-- Script para el Bot de Ayuda Inteligente -->
+    <script>
+    (function() {
+        const botWindow = document.getElementById('helpBotWindow');
+        const botToggle = document.getElementById('helpBotToggle');
+        const closeBotBtn = document.getElementById('closeBotBtn');
+        const botMessages = document.getElementById('helpBotMessages');
+        const botInput = document.getElementById('helpBotInput');
+        const sendBotBtn = document.getElementById('sendBotBtn');
+        const quickBtns = document.querySelectorAll('.quick-btn');
+
+        // Función para agregar mensaje del usuario
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'user-message';
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="bi bi-person"></i>
+                </div>
+                <div class="message-content">
+                    <p>${message}</p>
+                </div>
+            `;
+            botMessages.appendChild(messageDiv);
+            botMessages.scrollTop = botMessages.scrollHeight;
+        }
+
+        // Función para agregar mensaje del bot
+        function addBotMessage(htmlContent) {
+            setTimeout(() => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'bot-message';
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        ${htmlContent}
+                    </div>
+                `;
+                botMessages.appendChild(messageDiv);
+                botMessages.scrollTop = botMessages.scrollHeight;
+            }, 500);
+        }
+
+        // Función para mostrar productos
+        function displayProducts(productos, titulo) {
+            if (!productos || productos.length === 0) {
+                addBotMessage(`<p>😔 No encontré productos que coincidan con tu búsqueda. Intenta con otros términos o revisa nuestras categorías.</p>`);
+                return;
+            }
+
+            let html = `<p><strong>${titulo}</strong></p>`;
+            productos.forEach(producto => {
+                html += `
+                    <div class="product-card-bot">
+                        <h6>${producto.nombre}</h6>
+                        <p>${producto.descripcion.substring(0, 100)}${producto.descripcion.length > 100 ? '...' : ''}</p>
+                        <p><strong>Categoría:</strong> ${producto.categoria}</p>
+                        <p class="price">Bs. ${producto.precio.toFixed(2)}</p>
+                        <p><small>Stock: ${producto.stock} unidades</small></p>
+                        <a href="${producto.url}" target="_blank">Ver detalles →</a>
+                    </div>
+                `;
+            });
+            addBotMessage(html);
+        }
+
+        // Función para procesar mensaje del usuario usando la API unificada
+        async function processMessage(message) {
+            if (!message || !message.trim()) {
+                return;
+            }
+            
+            addUserMessage(message);
+            addBotMessage('<p>💭 Procesando tu solicitud...</p>');
+            
+            try {
+                // Usar la API unificada del bot
+                const response = await fetch('/api/bot/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({mensaje: message})
+                });
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    addBotMessage(`<p>❌ ${data.error || 'Error al procesar tu mensaje'}</p>`);
+                    return;
+                }
+                
+                // Procesar respuesta según el tipo
+                switch(data.tipo) {
+                    case 'buscar':
+                        if (data.productos && data.productos.length > 0) {
+                            displayProducts(data.productos, `🔍 ${data.mensaje}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos que coincidan con tu búsqueda. Intenta con otros términos.</p>');
+                        }
+                        break;
+                    
+                    case 'recomendar':
+                        if (data.productos && data.productos.length > 0) {
+                            const categoriaText = data.categoria ? ` de ${data.categoria}` : '';
+                            displayProducts(data.productos, `💡 ${data.mensaje}${categoriaText}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos que coincidan con tus necesidades. Intenta ser más específico o ajusta tu presupuesto.</p>');
+                        }
+                        break;
+                    
+                    case 'categorias':
+                        let html = `<p><strong>📂 ${data.mensaje}:</strong></p><ul>`;
+                        data.categorias.forEach(cat => {
+                            html += `<li><strong>${cat.nombre}</strong></li>`;
+                        });
+                        html += '</ul><p>💡 Puedes buscar productos de una categoría específica, por ejemplo: "buscar productos de smartphones"</p>';
+                        addBotMessage(html);
+                        break;
+                    
+                    case 'precio':
+                        if (data.productos && data.productos.length > 0) {
+                            displayProducts(data.productos, `💰 ${data.mensaje}:`);
+                        } else {
+                            addBotMessage('<p>😔 No encontré productos en ese rango de precio. Intenta con otro rango.</p>');
+                        }
+                        break;
+                    
+                    default:
+                        // Respuesta de ayuda
+                        let ayudaHtml = `<p>${data.mensaje}</p>`;
+                        if (data.opciones && data.opciones.length > 0) {
+                            ayudaHtml += '<ul>';
+                            data.opciones.forEach(opcion => {
+                                ayudaHtml += `<li>${opcion}</li>`;
+                            });
+                            ayudaHtml += '</ul>';
+                        }
+                        ayudaHtml += '<p>💡 Ejemplos de uso:</p><ul>';
+                        ayudaHtml += '<li><strong>"buscar laptop"</strong> - Busca productos específicos</li>';
+                        ayudaHtml += '<li><strong>"recomiéndame un celular hasta 3000 bs"</strong> - Recomendaciones con presupuesto</li>';
+                        ayudaHtml += '<li><strong>"productos baratos"</strong> - Productos económicos</li>';
+                        ayudaHtml += '<li><strong>"categorías"</strong> - Ver todas las categorías</li>';
+                        ayudaHtml += '</ul>';
+                        addBotMessage(ayudaHtml);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                addBotMessage('<p>❌ Error de conexión. Por favor, verifica tu conexión a internet.</p>');
+            }
+        }
+
+        // Función para enviar mensaje
+        function sendMessage() {
+            const message = botInput.value.trim();
+            if (!message) return;
+
+            processMessage(message);
+            botInput.value = '';
+        }
+
+        // Event listeners
+        botToggle.addEventListener('click', () => {
+            botWindow.classList.toggle('active');
+        });
+
+        closeBotBtn.addEventListener('click', () => {
+            botWindow.classList.remove('active');
+        });
+
+        sendBotBtn.addEventListener('click', sendMessage);
+
+        botInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Botones rápidos
+        quickBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.getAttribute('data-action');
+                let message = '';
+
+                switch(action) {
+                    case 'buscar':
+                        message = 'Buscar productos';
+                        break;
+                    case 'recomendar':
+                        message = 'Recomiéndame productos';
+                        break;
+                    case 'precio':
+                        message = 'Productos por precio';
+                        break;
+                    case 'categorias':
+                        message = 'Categorías';
+                        break;
+                }
+
+                if (message) {
+                    processMessage(message);
+                }
+            });
+        });
+    })();
+    </script>
+    <!-- Script para colores aleatorios en iconos -->
+    <script>
+    (function() {
+        // Paleta de colores vibrantes y visibles
+        const coloresVibrantes = [
+            '#FF3B30', // Rojo vibrante
+            '#FF9500', // Naranja vibrante
+            '#FFCC00', // Amarillo dorado
+            '#34C759', // Verde esmeralda
+            '#007AFF', // Azul iOS
+            '#5AC8FA', // Azul claro
+            '#AF52DE', // Púrpura
+            '#FF2D55', // Rosa vibrante
+            '#00C7BE', // Turquesa
+            '#FF6B35', // Naranja coral
+            '#4ECDC4', // Verde azulado
+            '#45B7D1', // Azul cielo
+            '#FFA07A', // Salmón
+            '#98D8C8', // Verde menta
+            '#F7DC6F', // Amarillo claro
+            '#BB8FCE', // Púrpura claro
+            '#85C1E2', // Azul pastel
+            '#F8B739', // Amarillo naranja
+            '#E74C3C', // Rojo coral
+            '#3498DB', // Azul brillante
+            '#2ECC71', // Verde brillante
+            '#9B59B6', // Púrpura profundo
+            '#1ABC9C', // Turquesa profundo
+            '#E67E22', // Naranja profundo
+            '#16A085', // Verde esmeralda profundo
+            '#D35400', // Naranja oscuro
+            '#C0392B', // Rojo oscuro
+            '#8E44AD', // Púrpura oscuro
+            '#2980B9', // Azul oscuro
+            '#27AE60'  // Verde oscuro
+        ];
+
+        // Función para obtener un color aleatorio
+        function obtenerColorAleatorio() {
+            return coloresVibrantes[Math.floor(Math.random() * coloresVibrantes.length)];
+        }
+
+        // Función para aplicar colores aleatorios a los iconos
+        function aplicarColoresAleatorios() {
+            // Seleccionar todos los iconos, excluyendo solo los que tienen clases de texto específicas
+            const iconos = document.querySelectorAll('.bi');
+            
+            iconos.forEach(function(icono) {
+                // Saltar iconos con clases de texto específicas que queremos mantener
+                if (icono.classList.contains('text-muted') || 
+                    icono.classList.contains('text-light') || 
+                    icono.classList.contains('text-white')) {
+                    return;
+                }
+                
+                // Verificar si el icono está en un contexto donde debe mantener su color
+                const esIconoNavbar = icono.closest('.navbar-nav');
+                const esIconoBrand = icono.closest('.navbar-brand');
+                const esIconoBoton = icono.closest('.btn');
+                const esIconoBadge = icono.closest('.badge');
+                const tieneColorInline = icono.getAttribute('style') && icono.getAttribute('style').includes('color:');
+                
+                // Si ya tiene color inline y no queremos sobrescribirlo, saltar
+                if (tieneColorInline && !esIconoNavbar && !esIconoBoton) {
+                    // Permitir sobrescribir solo si no es un icono especial
+                    return;
+                }
+                
+                // Aplicar colores aleatorios según el contexto
+                if (esIconoBrand) {
+                    // Icono del brand - mantener color pero hacerlo más vibrante
+                    const colorAleatorio = obtenerColorAleatorio();
+                    icono.style.color = colorAleatorio;
+                    icono.style.filter = 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4))';
+                    icono.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.3)';
+                } else if (esIconoNavbar) {
+                    // Iconos en navbar - colores vibrantes pero visibles sobre fondo oscuro
+                    const colorAleatorio = obtenerColorAleatorio();
+                    icono.style.color = colorAleatorio;
+                    icono.style.filter = 'drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3)) brightness(1.2)';
+                    icono.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.5)';
+                } else if (esIconoBoton) {
+                    // Iconos en botones - colores vibrantes
+                    const colorAleatorio = obtenerColorAleatorio();
+                    icono.style.color = colorAleatorio;
+                    icono.style.filter = 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))';
+                    icono.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.2)';
+                } else if (esIconoBadge) {
+                    // Mantener color del badge pero hacer más visible
+                    if (!icono.style.color) {
+                        icono.style.color = obtenerColorAleatorio();
+                        icono.style.filter = 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))';
+                    }
+                } else {
+                    // Otros iconos - colores aleatorios vibrantes
+                    const colorAleatorio = obtenerColorAleatorio();
+                    icono.style.color = colorAleatorio;
+                    icono.style.filter = 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))';
+                    icono.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.2)';
+                    
+                    // Asegurar que el icono sea visible aumentando el tamaño si es necesario
+                    const tamañoActual = window.getComputedStyle(icono).fontSize;
+                    if (parseFloat(tamañoActual) < 16) {
+                        icono.style.fontSize = '1.2em';
+                    }
+                }
+            });
+        }
+
+        // Aplicar colores cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', aplicarColoresAleatorios);
+        } else {
+            aplicarColoresAleatorios();
+        }
+
+        // Re-aplicar colores cuando se cargue contenido dinámico
+        const observer = new MutationObserver(function(mutations) {
+            let shouldReapply = false;
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length > 0) {
+                    shouldReapply = true;
+                }
+            });
+            if (shouldReapply) {
+                setTimeout(aplicarColoresAleatorios, 100);
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    })();
+    </script>
+    <script>
+    (function(){
+        try {
+            var linkEl = document.getElementById('bootstrap-css');
+            var BOOTSWATCH_BASE = 'https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/';
+            // Mapear slugs de categorías a temas Bootswatch
+            var categoryToTheme = {
+                'smartphones': 'flatly',
+                'laptops': 'cosmo',
+                'tablets': 'minty',
+                'accesorios': 'sandstone',
+                'servicios-de-mantenimiento': 'slate',
+                'servicios': 'slate',
+                'servicios-mantenimiento': 'slate'
+            };
+
+            function applyBootswatch(themeName) {
+                if (!linkEl || !themeName) return;
+                var href = BOOTSWATCH_BASE + themeName + '/bootstrap.min.css';
+                if (linkEl.getAttribute('href') !== href) {
+                    linkEl.setAttribute('href', href);
+                }
+            }
+
+            // Detectar categoría actual desde el servidor
+            var serverCatSlug = null;
+            {% if categoria_actual %}
+                serverCatSlug = '{{ categoria_actual.nombre|lower|replace(' ', '-') }}';
+            {% endif %}
+
+            var savedSw = localStorage.getItem('ew_theme_sw');
+            var themeToApply = null;
+            if (serverCatSlug && categoryToTheme[serverCatSlug]) {
+                themeToApply = categoryToTheme[serverCatSlug];
+                localStorage.setItem('ew_theme_sw', themeToApply);
+            } else if (savedSw) {
+                themeToApply = savedSw;
+            } else {
+                themeToApply = 'flatly';
+            }
+            applyBootswatch(themeToApply);
+
+            // Guardar selección al navegar por categorías
+            document.querySelectorAll('a[data-theme-name]').forEach(function(a){
+                a.addEventListener('click', function(){
+                    var slug = this.getAttribute('data-theme-name');
+                    var sw = categoryToTheme[slug];
+                    if (sw) localStorage.setItem('ew_theme_sw', sw);
+                });
+            });
+        } catch (e) {}
+    })();
+    </script>
+    <script>
+    (function(){
+        try{
+            var savedTheme = localStorage.getItem('ew_theme');
+            if (savedTheme && !document.body.className) {
+                document.body.classList.add(savedTheme);
+            }
+            document.querySelectorAll('a[data-theme]').forEach(function(link){
+                link.addEventListener('click', function(){
+                    var theme = this.getAttribute('data-theme');
+                    if (theme) {
+                        localStorage.setItem('ew_theme', theme);
+                    }
+                });
+            });
+        }catch(e){}
+    })();
+    </script>
 </body>
 </html> 

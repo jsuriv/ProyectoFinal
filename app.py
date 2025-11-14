@@ -2371,6 +2371,402 @@ def procesar_pedido_paypal(payment_id):
         flash('Error al procesar el pedido. Por favor, intente nuevamente.', 'error')
         return redirect(url_for('carrito'))
 
+# API para el bot de ayuda
+@app.route('/api/bot/buscar_productos', methods=['POST'])
+def api_bot_buscar_productos():
+    try:
+        data = request.get_json()
+        query = data.get('query', '').lower()
+        categoria = data.get('categoria', '').lower()
+        precio_max = data.get('precio_max', None)
+        precio_min = data.get('precio_min', None)
+        
+        # Construir consulta base
+        productos_query = Producto.query.filter_by(estado='activo')
+        
+        # Filtrar por búsqueda de texto
+        if query:
+            productos_query = productos_query.filter(
+                (Producto.nombre.ilike(f'%{query}%')) |
+                (Producto.descripcion.ilike(f'%{query}%'))
+            )
+        
+        # Filtrar por categoría
+        if categoria:
+            categoria_obj = Categoria.query.filter(
+                Categoria.nombre.ilike(f'%{categoria}%')
+            ).first()
+            if categoria_obj:
+                productos_query = productos_query.filter_by(id_categoria=categoria_obj.id_categoria)
+        
+        # Filtrar por precio
+        if precio_max:
+            productos_query = productos_query.filter(Producto.precio <= float(precio_max))
+        if precio_min:
+            productos_query = productos_query.filter(Producto.precio >= float(precio_min))
+        
+        productos = productos_query.order_by(Producto.precio).limit(10).all()
+        
+        # Formatear respuesta
+        productos_data = []
+        for producto in productos:
+            productos_data.append({
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion or 'Sin descripción',
+                'precio': float(producto.precio),
+                'stock': producto.stock,
+                'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                'url': url_for('producto', id=producto.id_producto)
+            })
+        
+        return jsonify({
+            'success': True,
+            'productos': productos_data,
+            'total': len(productos_data)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/bot/recomendar', methods=['POST'])
+def api_bot_recomendar():
+    try:
+        data = request.get_json()
+        necesidad = data.get('necesidad', '').lower()
+        presupuesto = data.get('presupuesto', None)
+        uso = data.get('uso', '').lower()
+        
+        # Palabras clave para categorías
+        categorias_keywords = {
+            'smartphone': ['smartphone', 'celular', 'telefono', 'teléfono', 'móvil', 'movil', 'iphone', 'samsung', 'huawei'],
+            'laptop': ['laptop', 'portatil', 'portátil', 'notebook', 'computadora', 'pc portatil', 'macbook'],
+            'tablet': ['tablet', 'ipad', 'tableta'],
+            'accesorio': ['accesorio', 'auricular', 'audifono', 'cargador', 'cable', 'case', 'funda', 'protector']
+        }
+        
+        # Determinar categoría basada en necesidad
+        categoria_id = None
+        categoria_nombre = None
+        for cat_name, keywords in categorias_keywords.items():
+            if any(keyword in necesidad for keyword in keywords):
+                categoria_obj = Categoria.query.filter(
+                    Categoria.nombre.ilike(f'%{cat_name}%')
+                ).first()
+                if categoria_obj:
+                    categoria_id = categoria_obj.id_categoria
+                    categoria_nombre = categoria_obj.nombre
+                    break
+        
+        # Construir consulta
+        productos_query = Producto.query.filter_by(estado='activo')
+        
+        if categoria_id:
+            productos_query = productos_query.filter_by(id_categoria=categoria_id)
+        
+        # Filtrar por presupuesto
+        if presupuesto:
+            try:
+                presupuesto_float = float(presupuesto)
+                productos_query = productos_query.filter(Producto.precio <= presupuesto_float)
+            except:
+                pass
+        
+        # Ordenar por precio (más económico primero) o por stock
+        if 'economico' in necesidad or 'barato' in necesidad or 'precio' in necesidad:
+            productos_query = productos_query.order_by(Producto.precio)
+        elif 'mejor' in necesidad or 'calidad' in necesidad or 'premium' in necesidad:
+            productos_query = productos_query.order_by(Producto.precio.desc())
+        else:
+            productos_query = productos_query.order_by(Producto.stock.desc(), Producto.precio)
+        
+        productos = productos_query.limit(5).all()
+        
+        # Formatear respuesta
+        productos_data = []
+        for producto in productos:
+            productos_data.append({
+                'id': producto.id_producto,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion or 'Sin descripción',
+                'precio': float(producto.precio),
+                'stock': producto.stock,
+                'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+                'url': url_for('producto', id=producto.id_producto)
+            })
+        
+        return jsonify({
+            'success': True,
+            'productos': productos_data,
+            'categoria': categoria_nombre,
+            'total': len(productos_data)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/bot/categorias', methods=['GET'])
+def api_bot_categorias():
+    try:
+        categorias = Categoria.query.all()
+        categorias_data = [{'id': cat.id_categoria, 'nombre': cat.nombre} for cat in categorias]
+        return jsonify({
+            'success': True,
+            'categorias': categorias_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/bot/chat', methods=['POST'])
+def api_bot_chat():
+    """
+    API unificada para el bot de ayuda
+    Procesa mensajes del usuario y devuelve respuestas inteligentes
+    """
+    try:
+        data = request.get_json()
+        mensaje = data.get('mensaje', '').strip()
+        
+        if not mensaje:
+            return jsonify({
+                'success': False,
+                'error': 'Mensaje vacío'
+            }), 400
+        
+        mensaje_lower = mensaje.lower()
+        
+        # Detectar intención del usuario
+        intencion = detectar_intencion(mensaje_lower)
+        
+        if intencion['tipo'] == 'buscar':
+            # Buscar productos
+            productos = buscar_productos_bot(
+                query=intencion.get('query', ''),
+                categoria=intencion.get('categoria'),
+                precio_max=intencion.get('precio_max'),
+                precio_min=intencion.get('precio_min')
+            )
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'buscar',
+                'productos': productos,
+                'total': len(productos),
+                'mensaje': f"Encontré {len(productos)} producto(s) para ti"
+            })
+        
+        elif intencion['tipo'] == 'recomendar':
+            # Recomendar productos
+            productos = recomendar_productos_bot(
+                necesidad=mensaje,
+                presupuesto=intencion.get('presupuesto'),
+                uso=intencion.get('uso')
+            )
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'recomendar',
+                'productos': productos['productos'],
+                'categoria': productos.get('categoria'),
+                'total': len(productos['productos']),
+                'mensaje': f"Te recomiendo estos {len(productos['productos'])} productos"
+            })
+        
+        elif intencion['tipo'] == 'categorias':
+            # Listar categorías
+            categorias = Categoria.query.all()
+            categorias_data = [{'id': cat.id_categoria, 'nombre': cat.nombre} for cat in categorias]
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'categorias',
+                'categorias': categorias_data,
+                'mensaje': f"Tenemos {len(categorias_data)} categorías disponibles"
+            })
+        
+        elif intencion['tipo'] == 'precio':
+            # Buscar por precio
+            productos = buscar_productos_bot(
+                precio_max=intencion.get('precio_max'),
+                precio_min=intencion.get('precio_min'),
+                query=intencion.get('query', '')
+            )
+            
+            return jsonify({
+                'success': True,
+                'tipo': 'precio',
+                'productos': productos,
+                'total': len(productos),
+                'mensaje': f"Encontré {len(productos)} producto(s) en ese rango de precio"
+            })
+        
+        else:
+            # Respuesta genérica
+            return jsonify({
+                'success': True,
+                'tipo': 'ayuda',
+                'mensaje': 'Puedo ayudarte a buscar productos, recomendar según tus necesidades, o mostrar categorías. ¿Qué necesitas?',
+                'opciones': [
+                    'Buscar productos específicos',
+                    'Recomendaciones personalizadas',
+                    'Ver categorías disponibles',
+                    'Productos por precio'
+                ]
+            })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def detectar_intencion(mensaje):
+    """Detecta la intención del usuario basándose en el mensaje"""
+    intencion = {'tipo': 'ayuda'}
+    
+    # Detectar búsqueda
+    if any(palabra in mensaje for palabra in ['buscar', 'busco', 'encontrar', 'quiero', 'necesito comprar']):
+        intencion['tipo'] = 'buscar'
+        # Extraer término de búsqueda
+        palabras_busqueda = ['buscar', 'busco', 'encontrar', 'quiero', 'necesito comprar']
+        query = mensaje
+        for palabra in palabras_busqueda:
+            query = query.replace(palabra, '').strip()
+        intencion['query'] = query
+        
+        # Extraer precio si se menciona
+        precio_match = re.search(r'(\d+)\s*(bs|bolivianos|bs\.)', mensaje, re.IGNORECASE)
+        if precio_match:
+            intencion['precio_max'] = precio_match.group(1)
+    
+    # Detectar recomendación
+    elif any(palabra in mensaje for palabra in ['recomendar', 'recomendación', 'recomiéndame', 'mejor', 'sugerir']):
+        intencion['tipo'] = 'recomendar'
+        precio_match = re.search(r'(\d+)\s*(bs|bolivianos|bs\.)', mensaje, re.IGNORECASE)
+        if precio_match:
+            intencion['presupuesto'] = precio_match.group(1)
+    
+    # Detectar categorías
+    elif any(palabra in mensaje for palabra in ['categoría', 'categoria', 'categorias', 'tipos']):
+        intencion['tipo'] = 'categorias'
+    
+    # Detectar búsqueda por precio
+    elif any(palabra in mensaje for palabra in ['precio', 'barato', 'económico', 'economico', 'caro', 'hasta']):
+        intencion['tipo'] = 'precio'
+        precio_match = re.search(r'(\d+)\s*(bs|bolivianos|bs\.)', mensaje, re.IGNORECASE)
+        if precio_match:
+            intencion['precio_max'] = precio_match.group(1)
+        if 'barato' in mensaje or 'económico' in mensaje or 'economico' in mensaje:
+            intencion['query'] = 'barato'
+    
+    return intencion
+
+def buscar_productos_bot(query='', categoria=None, precio_max=None, precio_min=None):
+    """Función auxiliar para buscar productos"""
+    productos_query = Producto.query.filter_by(estado='activo')
+    
+    if query:
+        productos_query = productos_query.filter(
+            (Producto.nombre.ilike(f'%{query}%')) |
+            (Producto.descripcion.ilike(f'%{query}%'))
+        )
+    
+    if categoria:
+        categoria_obj = Categoria.query.filter(
+            Categoria.nombre.ilike(f'%{categoria}%')
+        ).first()
+        if categoria_obj:
+            productos_query = productos_query.filter_by(id_categoria=categoria_obj.id_categoria)
+    
+    if precio_max:
+        productos_query = productos_query.filter(Producto.precio <= float(precio_max))
+    if precio_min:
+        productos_query = productos_query.filter(Producto.precio >= float(precio_min))
+    
+    productos = productos_query.order_by(Producto.precio).limit(10).all()
+    
+    productos_data = []
+    for producto in productos:
+        productos_data.append({
+            'id': producto.id_producto,
+            'nombre': producto.nombre,
+            'descripcion': producto.descripcion or 'Sin descripción',
+            'precio': float(producto.precio),
+            'stock': producto.stock,
+            'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+            'url': url_for('producto', id=producto.id_producto)
+        })
+    
+    return productos_data
+
+def recomendar_productos_bot(necesidad='', presupuesto=None, uso=''):
+    """Función auxiliar para recomendar productos"""
+    necesidad_lower = necesidad.lower()
+    
+    categorias_keywords = {
+        'smartphone': ['smartphone', 'celular', 'telefono', 'teléfono', 'móvil', 'movil', 'iphone', 'samsung', 'huawei'],
+        'laptop': ['laptop', 'portatil', 'portátil', 'notebook', 'computadora', 'pc portatil', 'macbook'],
+        'tablet': ['tablet', 'ipad', 'tableta'],
+        'accesorio': ['accesorio', 'auricular', 'audifono', 'cargador', 'cable', 'case', 'funda', 'protector']
+    }
+    
+    categoria_id = None
+    categoria_nombre = None
+    for cat_name, keywords in categorias_keywords.items():
+        if any(keyword in necesidad_lower for keyword in keywords):
+            categoria_obj = Categoria.query.filter(
+                Categoria.nombre.ilike(f'%{cat_name}%')
+            ).first()
+            if categoria_obj:
+                categoria_id = categoria_obj.id_categoria
+                categoria_nombre = categoria_obj.nombre
+                break
+    
+    productos_query = Producto.query.filter_by(estado='activo')
+    
+    if categoria_id:
+        productos_query = productos_query.filter_by(id_categoria=categoria_id)
+    
+    if presupuesto:
+        try:
+            presupuesto_float = float(presupuesto)
+            productos_query = productos_query.filter(Producto.precio <= presupuesto_float)
+        except:
+            pass
+    
+    if 'economico' in necesidad_lower or 'barato' in necesidad_lower or 'precio' in necesidad_lower:
+        productos_query = productos_query.order_by(Producto.precio)
+    elif 'mejor' in necesidad_lower or 'calidad' in necesidad_lower or 'premium' in necesidad_lower:
+        productos_query = productos_query.order_by(Producto.precio.desc())
+    else:
+        productos_query = productos_query.order_by(Producto.stock.desc(), Producto.precio)
+    
+    productos = productos_query.limit(5).all()
+    
+    productos_data = []
+    for producto in productos:
+        productos_data.append({
+            'id': producto.id_producto,
+            'nombre': producto.nombre,
+            'descripcion': producto.descripcion or 'Sin descripción',
+            'precio': float(producto.precio),
+            'stock': producto.stock,
+            'categoria': producto.categoria.nombre if producto.categoria else 'Sin categoría',
+            'url': url_for('producto', id=producto.id_producto)
+        })
+    
+    return {
+        'productos': productos_data,
+        'categoria': categoria_nombre
+    }
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
