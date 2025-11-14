@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.urls import url_parse
 import os
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
@@ -261,39 +260,26 @@ def agregar_servicio_carrito():
         precio_servicio = float(request.form.get('precio_servicio'))
         tipo = request.form.get('tipo')
         
-        # Crear un producto temporal para el servicio
-        servicio_producto = {
-            'id_producto': f'servicio_{id_servicio}',
-            'nombre': nombre_servicio,
-            'precio': precio_servicio,
-            'tipo': tipo,
-            'descripcion': f'Servicio de mantenimiento: {nombre_servicio}',
-            'imagen': None
-        }
-        
-        # Agregar al carrito (usando la funcionalidad existente)
-        item_carrito = Carrito(
-            id_usuario=current_user.id_usuario,
-            id_producto=id_servicio,  # Usar el ID del servicio
-            cantidad=1
-        )
-        
-        # Guardar información adicional del servicio en la sesión
+        # Verificar si el servicio ya está en el carrito
         if 'servicios_carrito' not in session:
             session['servicios_carrito'] = {}
         
+        # Verificar si el servicio ya existe en el carrito
+        if str(id_servicio) in session['servicios_carrito']:
+            flash(f'El servicio "{nombre_servicio}" ya está en tu carrito', 'info')
+            return redirect(url_for('servicios_mantenimiento'))
+        
+        # Guardar servicio solo en la sesión (NO en la tabla Carrito)
         session['servicios_carrito'][str(id_servicio)] = {
+            'id_servicio': id_servicio,
             'nombre': nombre_servicio,
             'precio': precio_servicio,
             'tipo': tipo
         }
-        
-        db.session.add(item_carrito)
-        db.session.commit()
+        session.modified = True
         
         flash(f'Servicio "{nombre_servicio}" agregado al carrito exitosamente', 'success')
     except Exception as e:
-        db.session.rollback()
         flash('Error al agregar el servicio al carrito', 'error')
         print(f"Error: {str(e)}")
     
@@ -303,16 +289,10 @@ def agregar_servicio_carrito():
 @login_required
 def eliminar_servicio_carrito(id_servicio):
     try:
-<<<<<<< HEAD
         # Eliminar servicio de la sesión (NO de la tabla Carrito)
         if 'servicios_carrito' in session and str(id_servicio) in session['servicios_carrito']:
             servicio_nombre = session['servicios_carrito'][str(id_servicio)]['nombre']
             del session['servicios_carrito'][str(id_servicio)]
-=======
-        # Eliminar servicio de la sesión
-        if 'servicios_carrito' in session and id_servicio in session['servicios_carrito']:
-            servicio_nombre = session['servicios_carrito'][id_servicio]['nombre']
-            del session['servicios_carrito'][id_servicio]
             session.modified = True
             flash(f'Servicio "{servicio_nombre}" eliminado del carrito', 'success')
         else:
@@ -389,16 +369,12 @@ def agregar_al_carrito():
 @login_required
 def carrito():
     try:
-<<<<<<< HEAD
         # Obtener todos los items del carrito
-=======
->>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
         items_carrito = Carrito.query.filter_by(id_usuario=current_user.id_usuario).all()
         
         # Obtener servicios del carrito desde la sesión
         servicios_carrito = session.get('servicios_carrito', {})
         
-<<<<<<< HEAD
         # Obtener IDs de servicios para filtrar productos que puedan ser servicios
         ids_servicios = []
         for sid in servicios_carrito.keys():
@@ -441,10 +417,6 @@ def carrito():
         
         # Calcular total de productos
         total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_productos)
-=======
-        # Calcular total de productos
-        total_productos = sum(Decimal(str(item.producto.precio)) * item.cantidad for item in items_carrito)
->>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
         
         # Calcular total de servicios
         total_servicios = sum(Decimal(str(servicio['precio'])) for servicio in servicios_carrito.values())
@@ -453,11 +425,7 @@ def carrito():
         total = total_productos + total_servicios
         
         return render_template('carrito.html', 
-<<<<<<< HEAD
                              items=items_productos, 
-=======
-                             items=items_carrito, 
->>>>>>> 41c10d21801e334f1f26c8377c022f7ad6a3c6d0
                              servicios=servicios_carrito,
                              total=total,
                              total_productos=total_productos,
