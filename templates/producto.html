@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-md-6">
             {% if producto.imagen %}
-            <img src="{{ url_for('static', filename='images/productos/' + producto.imagen) }}" 
+            <img src="{{ url_for('serve_image', filename=producto.imagen) }}" 
                  class="img-fluid rounded" alt="{{ producto.nombre }}">
             {% else %}
             <div class="bg-light rounded p-5 text-center">
