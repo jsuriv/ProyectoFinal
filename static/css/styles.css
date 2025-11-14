@@ -86,7 +86,7 @@
     --secondary-teal: var(--secondary-green);
     --dark-teal: var(--dark-green);
     --light-teal: var(--light-green);
-    --accent-teal: var(--primary-green);
+    --accent-teal: var(--accent-green);
     --shadow-color: rgba(0, 0, 0, 0.08);
 }
 
@@ -631,14 +631,14 @@ a:hover {
     color: var(--text-dark);
     border: 1px solid var(--border-color);
     transition: all 0.2s ease;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .service-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: var(--primary-green);
 }
 
@@ -824,21 +824,20 @@ footer a:hover {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Servicios de mantenimiento específicos - minimalista */
+/* Servicios de mantenimiento específicos */
 .maintenance-section {
     background: var(--white);
     padding: 3rem 0;
     margin: 2rem 0;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .service-icon {
     font-size: 3rem;
     color: var(--primary-green);
     margin-bottom: 1.5rem;
-    opacity: 0.9;
 }
 
 /* Listas elegantes */
